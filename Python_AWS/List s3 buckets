@@ -1,0 +1,11 @@
+[root@rhel-master naveen]# cat aws.py
+import boto3
+
+s3 = boto3.resource('s3')
+
+for bucket in s3.buckets.all():
+    print(bucket.name)
+[root@rhel-master naveen]#  python aws.py
+naveenbrains
+naveenbrains1234
+[root@rhel-master naveen]#

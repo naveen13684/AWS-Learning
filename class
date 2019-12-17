@@ -1,0 +1,368 @@
+  AWS:
+
+Certification Questions AWS:
+----------------------------
+
+Set-1
+
+
+https://drive.google.com/open?id=1ufIqRcMMVHcSaM1GTNaFIEWBBj52wZgIe5FU_OFrw7E
+
+
+https://drive.google.com/open?id=1p2pMgnFPtmN4gVeGMW0piaC21NDHQDOXnzI8-otsSrU
+
+
+https://drive.google.com/open?id=1QWkvFbU16Vg9kKAdXisXVKuaM4zet1j1Sa25opUVTBg
+
+
+https://drive.google.com/open?id=1Ang3FhjJ55ZCsQ8XK1Wo2qKlMQuU1bbOqKuNS6bMqLo
+
+
+
+Set-2
+
+
+
+https://drive.google.com/open?id=13eP9RhjJAAYD37ydYi9pkG3LoVjVgosRDEk3nkdGCY8
+
+
+https://drive.google.com/open?id=12lt1U0NkH7h0obg_kqpd2X-FDU78gNXAy8VJzOy4JSE
+
+
+https://drive.google.com/open?id=1MKZRgoWT3yWQA43eM1HOWQo_WM1iOrtvaC2ldRZAQdg
+
+
+https://drive.google.com/open?id=1XVkWjKBJxex52XHc4W05AYvk8SWprqpLTuUS448mMtg
+
+
+
+Set-3
+
+
+
+https://drive.google.com/open?id=1tOKdjs4LgLfQcrUf_g9HUkbJK7cIEfzsTrC4RZV916o
+
+
+https://drive.google.com/open?id=1nPy8ruoFD-japbHlgRXWjl_DUqrCNUwGkWD8n8_rOcg
+
+
+https://drive.google.com/open?id=10XJNg7SktWssVuywW0DJbRkd6EobJMnqEoXta3eOzqQ
+
+
+https://drive.google.com/open?id=1VV1wlMcU0GW9bBezoNEMd19CGTNuS_hSgkEdEJfb1ms
+
+
+
+set-4
+
+
+
+https://drive.google.com/open?id=1crCiiXptu0b1_vhrK7Rppdq_l0IsWq-7kS2BfTOCWu8
+
+
+https://drive.google.com/open?id=15K5DKAtbgrnYK7jj5K8aTSrA7uj4UANW2Kg-4Ts64K4
+
+
+https://drive.google.com/open?id=1cxXXB6na6zeb59o85wk-ojzMTwiUuo8_ulbG_fyz9Og
+
+Classroom Training Video:
+http://d3lqrzxp1riyme.cloudfront.net/video-1/firstclass.m3u8
+
+http://d3lqrzxp1riyme.cloudfront.net/video-2/firstclass.m3u8
+
+http://d3lqrzxp1riyme.cloudfront.net/video-3/class-3.m3u8
+
+http://d3lqrzxp1riyme.cloudfront.net/video-4/class-4.m3u8
+
+http://d3lqrzxp1riyme.cloudfront.net/video-5/class-4.m3u8
+
+http://d3lqrzxp1riyme.cloudfront.net/video-6/class-6.m3u8
+
+http://d3lqrzxp1riyme.cloudfront.net/video-7/class-7.m3u8
+
+http://d3lqrzxp1riyme.cloudfront.net/video-v8/class-v8.m3u8
+
+http://d3lqrzxp1riyme.cloudfront.net/video-9/class-9.m3u8
+
+http://d3lqrzxp1riyme.cloudfront.net/video-10/class-10.m3u8
+
+http://d3lqrzxp1riyme.cloudfront.net/video-11/class-11.m3u8
+
+http://d3lqrzxp1riyme.cloudfront.net/video-12/class-12.m3u8
+
+Important Sites:
+-----------------
+Download putty and puttygen  - Amazon recommends 
+https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html
+
+bitnami application catalog
+https://bitnami.com/stacks
+
+http://sample-videos.com/index.php
+Storage: 
+https://www.slideshare.net/AmazonWebServices/srv401-deep-dive-on-amazon-elastic-file-system-amazon-efs-75199945
+https://www.slideshare.net/AmazonWebServices/deep-dive-on-amazon-elastic-file-system-amazon-efs
+
+Free windows client for Amazon S3 and Amazon Cloud
+http://s3browser.com/download.php
+
+Windows Client for Amazon Glacier
+https://fastglacier.com/
+'- Low Cost storage
+'- provides secure and durable storage for data archiving and backup.
+
+Free ssl certificate
+https://www.sslforfree.com/create?domains=www.naveenbrains.tech+naveenbrains.tech
+
+BigRock : To Purchase Domain
+https://manage.bigrock.in/
+https://www.bigrock.in/
+naveen13684@gmail.com  / Indian1@3
+go to my account 
+https://manage.bigrock.in/servlet/ListAllOrdersServlet?formaction=listOrders
+
+Download sample HTML projects
+https://html5up.net/
+
+python script to delete vault
+https://github.com/leeroybrun/glacier-vault-remove/blob/master/README.md
+
+Common vernarability exposure
+http://cve.mitre.org/  
+
+Free ticketing sites
+https://www.zendesk.com/
+https://freshdesk.com/
+https://naveen13684.zendesk.com
+https://naveen13684.zendesk.com/agent//
+
+you can also use gitbash
+https://git-scm.com/downloads
+
+===========================
+LABS:
+===========================
+Ports:
+ssh '-22
+telnet '-23
+rlogin'-513
+serial '-9600
+http  '-80
+https'-443
+MYSQL'-3306
+RDP '-3389
+NFS'-2049
+
+
+Free-tier services
+Compute '''- EC2
+Storeage '''- S3, EFS, Glacier, 
+Database '''- Relational Database Service (RDS)
+Netowrking and Content Delivery - Route 53
+Management Tools ''- Cloudwatch, Trusted Advisor Dashboard(pay)
+Business Productivity ''- Amazon Chime, WorkDocs, WorkMail
+Security, Identity & Compliance - IAM,Inspector,AWS Single Sign-On,Certificate Manager,Directory Service
+
+
+1) creating windows instance
+Microsoft Windows Server 2016 Base - ami-292eaa4d
+'-expand existing C:\ drive  +1G  +10GB
+'-Add drive D:\
+'-Delete Drive D:\
+'-put some data, in D:\drive and detach and attach the drive to another instance and see if data visible
+
+1)wordpress
+WordPress is open source software you can use to create a beautiful website, blog, or app.
+https://wordpress.org/download/
+zip file:
+https://wordpress.org/latest.zip
+
+
+2) OpenCart
+open-source eCommerce platform
+Everything you need to create, scale and run your business
+https://www.opencart.com/
+opencart zip file :
+https://github-production-release-asset-2e65be.s3.amazonaws.com/2141186/35472250-6b2b-11e7-9682-7433c2747bde?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20180224%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20180224T144408Z&X-Amz-Expires=300&X-Amz-Signature=c8ea497a85d5b13b3bd8000652c4fd7df15967dffa80cb171758191cfd7afeae&X-Amz-SignedHeaders=host&actor_id=0&response-content-disposition=attachment%3B%20filename%3D3.0.2.0-OpenCart.zip&response-content-type=application%2Foctet-stream
+
+
+3) IBM : sugarCRM
+With Sugar you get a simple user interface, industry-leading customer experience, 
+and an intuitive customization platform.
+SugarCRM is a software company based in Cupertino, California. It produces the web application Sugar, 
+a customer relationship management (CRM) system. SugarCRM's functionality includes sales-force automation, 
+marketing campaigns, customer support, collaboration, Mobile CRM, Social CRM and reporting
+https://www.sugarcrm.com/download-ce
+zip file:
+https://excellmedia.dl.sourceforge.net/project/sugarcrm/1%20-%20SugarCRM%206.5.X/SugarCommunityEdition-6.5.X/SugarCE-6.5.26.zip
+
+
+4) create replication RDS, 2 application instances, one VPC, one elastic load balancer, 
+and 1 domain
+https://manage.bigrock.in/servlet/CustomerIndexServlet?referrerkey=Z2N5cDdVeUdURGRvc2VaYlpOV21vT0U4MERvZ3pHSXpheVp4VEZSV1hnb3BLaXZCbTJjSlN3PT0=\\\
+
+5) Create route53 configuraiton for your domain
+'- create NS record for your domain 
+'- create SOA record
+above two Amazon creates for you when you create zone'
+'- create A record
+'- create CNAME record
+'- create caa record
+'- generate AWS certificate and make sure your application is accessible through https://naveenbrains.tech
+'- create TXT record and test in nslookup
+'- create PTR record and test ping -a
+'- create SRV record and test
+
+6) Create Certificates from 
+
+7) create hosted zone using Route43
+'- urchase domain 
+'- host an application in domain 
+'- use https certificate and make it working with secure green lock enabled. 
+'- use opencart application fix: https://stackoverflow.com/questions/37153511/opencart-admin-not-working-after-change-http-to-https
+
+8) DNS failover
+Active-active failover: Use this failover configuration when you want all of your resources to be available the majority of the time. When a resource becomes unavailable, Route 53 can detect that it's unhealthy and stop including it when responding to queries.
+
+Active-passive failover: Use this failover configuration when you want a primary group of resources to be available the majority of the time and you want a secondary group of resources to be on standby in case all of the primary resources become unavailable. When responding to queries, Route 53 includes only the healthy primary resources. If all of the primary resources are unhealthy, Route 53 begins to include only the healthy secondary resources in response to DNS queries.
+
+Active-active-passive and other mixed configurations: You can combine alias and non-alias records to produce a variety of Route 53 behaviors.
+
+9) IAM - Identity Acces Management
+'- create policies
+'- create roles
+'- create groups 
+'- create users
+'- assign roles to users
+'- password secure for users, google athenticator 
+'- used case for programmatic access to user
+'- increase security
+'
+10) Storage : Amazon s3 and Amazon cloudFront and Fast Glacier
+'- create bucket
+'- create folders
+'- upload audio / video files
+'- do the same from Amazon s3 windows client and check it is getting reflected in s3 aws web
+
+
+11) create bucket in s3 storage with www.naveenbrains.tech
+'- https://html5up.net/  - download zip file of some project and upload them in the bucket
+'- Enable Versioning and Static website hosting
+'- host the website. 
+'- change the www.naveenbrains.tech 'A' record in route53 to s3 end point
+
+12) Replication of s3 storage bucket from one region to another region
+'- create two buckets in mumbai and verginia
+'- you need to enable versionining  for for all the buckets before replication 
+'- create replication role that will have access to list/read/write/ from one region to another region
+'- Note only new files will be replicated, old files will not get replicated
+
+13) Create EFS [ NFS] storage and mount them in linux VM - take AWS vm
+'- Go to EFS service
+'- select and create file system
+'- make sure you select proper security group [ aws_security ]
+'- make sure your security group has NFS port enabled TCP 2049
+'- create folder under /mnt
+''sudo mkdir -p /mnt/naveen-nfs
+''sudo mount -t nfs4 fs-d328eb9b.efs.us-east-1.amazonaws.com:/ /mnt/naveen
+'- you can mount this file system to another instance too and check data.
+
+
+14) Active Directory in aws and single sign on (SSO)
+'- create instancce : Microsoft Windows Server 2012 R2 Base : Directory Admin pass: Corp12345
+''select domain and also role while creating, you need to create new SSO role 
+''Ex: ec2-domain-join with AmazonEC2RoleforSSM permission
+''also make sure edit trust relation ship to point to "Service": "ec2.amazonaws.com" in json file.
+''and change it to "ds.amazonaws.com"
+'- Once the instance is up, first login using Administrator account becasue Domain account 'Admin' will be be disabled for login for the first time, once you login using administrator account then domain admin account works.
+''User name'.\Administrator pass: 32Q=5=&($Fr 
+'- complete role creation process after login using amazon account
+''go to server manager - > click on add roles and features and complete Active Directory domain services setup.
+''Ex: user: corp.naveen\admin pass:Corp12345   OR  corp.brains\admin Corp12345
+'- create AD user(naveen1234) under corp.naveen or corp.brains domain and set the password.
+'- integrate aws console with windows AD
+'- single sign on SSO for chat, email, EC2, database, exchange etc
+Services involved : EC2,Directory service,IAM
+
+15) Service Delivery - SSM - Environment - 2 instances , Monitoring - Cloud Watch , Ticketing - Zendisk/Freedesk and Automation
+'- build environment where your environment can talk to monitoring and automation
+'- create IAM role ec2-ssm-role
+'- launch instance select Amazon linux vm first one
+'- install agent using github
+
+Command to create stress
+sudo yum -y update
+sudo yum install stress -y
+sudo stress --cpu 8
+ 
+https://gist.github.com/sohailadnan
+https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-agent.html
+https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-install-ssm-win.html
+https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-install-ssm-agent.html
+https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-install-startup-linux.html
+https://gist.github.com/sohailadnan/37dd53dacb08aac6367d03eeab528206
+SSM - simple system manager
+'- 
+
+http://cve.mitre.org/  -common vernarability exposure
+https://www.zendesk.com/
+https://freshdesk.com/
+https://naveen13684.zendesk.com
+https://naveen13684.zendesk.com/agent//
+
+how internet download manager works?
+how torrentz works ?
+
+MY DOMAIN: 
+http://naveenbrains.tech/
+
+Name servers:
+----------------
+ns-1956.awsdns-52.co.uk
+ns-478.awsdns-59.com
+ns-547.awsdns-04.net
+ns-1516.awsdns-61.org
+
+example 
+naveenbrains.tech
+
+
+Examples: 
+    0 issue "caa.example.com" 
+    0 issuewild ";"
+
+https://naveen-idm.signin.aws.amazon.com/console
+dont open with the same brower 
+
+becasue it will log out.
+
+
+https://www.hirevue.com/
+
+
+
+AWS - Service Oriented Architecture 
+------------------------------------
+
+Examples:
+Marketing company
+Bulk email - send - Keep the reputation 
+AWS email service - outbound email
+
+why aws?
+1) An infrastructure service for the world
+leveragge deploy the applications worldwise, no need to build DC across the world.
+why build own services when we can consume aws services 
+they abtract lot of things
+why to build own 
+2) Elastic computing : Grow and shrink environment +200 machines
+3) Storage in the cloud
+security and compliance
+Pricing and availability
+
+
+You can connect remotely using this information:
+Public DNS'ec2-54-89-1-84.compute-1.amazonaws.com
+User name'Administrator
+Password'
+TvomoBY@SnH

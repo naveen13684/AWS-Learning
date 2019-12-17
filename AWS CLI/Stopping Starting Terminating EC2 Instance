@@ -1,0 +1,156 @@
+Stopping
+==========
+C:\Users\nk020131>aws ec2 stop-instances --instance-ids i-0bd3f122c74350f31
+{
+    "StoppingInstances": [
+        {
+            "InstanceId": "i-0bd3f122c74350f31",
+            "CurrentState": {
+                "Code": 64,
+                "Name": "stopping"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+C:\Users\nk020131>
+
+C:\Users\nk020131>aws ec2 stop-instances --instance-ids i-0bd3f122c74350f31
+{
+    "StoppingInstances": [
+        {
+            "InstanceId": "i-0bd3f122c74350f31",
+            "CurrentState": {
+                "Code": 80,
+                "Name": "stopped"
+            },
+            "PreviousState": {
+                "Code": 80,
+                "Name": "stopped"
+            }
+        }
+    ]
+}
+
+C:\Users\nk020131>
+
+
+Starting
+========
+
+C:\Users\nk020131>aws ec2 stop-instances --instance-ids i-0bd3f122c74350f31
+{
+    "StoppingInstances": [
+        {
+            "InstanceId": "i-0bd3f122c74350f31",
+            "CurrentState": {
+                "Code": 80,
+                "Name": "stopped"
+            },
+            "PreviousState": {
+                "Code": 80,
+                "Name": "stopped"
+            }
+        }
+    ]
+}
+
+C:\Users\nk020131>
+
+C:\Users\nk020131>aws ec2 start-instances --instance-ids i-0bd3f122c74350f31
+{
+    "StartingInstances": [
+        {
+            "InstanceId": "i-0bd3f122c74350f31",
+            "CurrentState": {
+                "Code": 0,
+                "Name": "pending"
+            },
+            "PreviousState": {
+                "Code": 0,
+                "Name": "pending"
+            }
+        }
+    ]
+}
+
+C:\Users\nk020131>aws ec2 start-instances --instance-ids i-0bd3f122c74350f31
+{
+    "StartingInstances": [
+        {
+            "InstanceId": "i-0bd3f122c74350f31",
+            "CurrentState": {
+                "Code": 16,
+                "Name": "running"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+C:\Users\nk020131>
+
+
+Terminating
+===========
+C:\Users\nk020131>aws ec2 terminate-instances --instance-ids i-0bd3f122c74350f31
+{
+    "TerminatingInstances": [
+        {
+            "InstanceId": "i-0bd3f122c74350f31",
+            "CurrentState": {
+                "Code": 32,
+                "Name": "shutting-down"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+C:\Users\nk020131>
+
+C:\Users\nk020131>aws ec2 terminate-instances --instance-ids i-0bd3f122c74350f31
+{
+    "TerminatingInstances": [
+        {
+            "InstanceId": "i-0bd3f122c74350f31",
+            "CurrentState": {
+                "Code": 32,
+                "Name": "shutting-down"
+            },
+            "PreviousState": {
+                "Code": 32,
+                "Name": "shutting-down"
+            }
+        }
+    ]
+}
+
+C:\Users\nk020131>aws ec2 terminate-instances --instance-ids i-0bd3f122c74350f31
+{
+    "TerminatingInstances": [
+        {
+            "InstanceId": "i-0bd3f122c74350f31",
+            "CurrentState": {
+                "Code": 48,
+                "Name": "terminated"
+            },
+            "PreviousState": {
+                "Code": 48,
+                "Name": "terminated"
+            }
+        }
+    ]
+}
+
+C:\Users\nk020131>

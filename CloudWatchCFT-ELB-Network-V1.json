@@ -1,0 +1,266 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "CloudWatch Alarms",
+    "Parameters": {
+        "LoadBalancerName": {
+            "Description": "Choose a ELB Name",
+            "Type": "String"
+        },
+        "networkELBdns": {
+            "Description": "Choose a networkDNS Name",
+            "Type": "String"
+        },
+        "account": {
+            "Description": "AWS account for application",
+            "Type": "String"
+        },
+        "criticalsnsarn": {
+            "Description": "Please provide an ARN of SNS topic - CRITICAL Type",
+            "Type": "String"
+        },
+        "warningsnsarn": {
+            "Description": "Please provide an ARN of SNS topic - WARNING Type",
+            "Type": "String"
+        }
+    },
+    "Resources": {
+	    "UnHealthyHostCountNetworkELB": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "NetworkELBname=${LoadBalancerName} NetworkDNS=${networkELBdns} Application_Account=${account} - Number of UnHealthyHostCounts"
+                },
+                "Namespace": "AWS/NetworkELB",
+                "MetricName": "UnHealthyHostCount",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "Threshold": "1",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "LoadBalancer",
+                        "Value": {
+                            "Ref": "LoadBalancerName"
+                        }
+                    }
+                ]
+            }
+        },
+	    "ActiveFlowCountNetworkELB": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "NetworkELBname=${LoadBalancerName} NetworkDNS=${networkELBdns} Application_Account=${account} - The total number of concurrent flows from clients to targets. "
+                },
+                "Namespace": "AWS/NetworkELB",
+                "MetricName": "ActiveFlowCount",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "Threshold": "500",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "LoadBalancer",
+                        "Value": {
+                            "Ref": "LoadBalancerName"
+                        }
+                    }
+                ]
+            }
+        },
+	    "ActiveFlowCountTLSNetworkELB": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "NetworkELBname=${LoadBalancerName} NetworkDNS=${networkELBdns} Application_Account=${account} - The total number of concurrent TLS flows from clients to targets. "
+                },
+                "Namespace": "AWS/NetworkELB",
+                "MetricName": "ActiveFlowCount_TLS",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "Threshold": "500",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "LoadBalancer",
+                        "Value": {
+                            "Ref": "LoadBalancerName"
+                        }
+                    }
+                ]
+            }
+        },
+	    "TCPClientResetCountNetworkELB": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "NetworkELBname=${LoadBalancerName} NetworkDNS=${networkELBdns} Application_Account=${account} - The total number of reset (RST) packets sent from a client to a target"
+                },
+                "Namespace": "AWS/NetworkELB",
+                "MetricName": "TCP_Client_Reset_Count",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "Threshold": "2",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "LoadBalancer",
+                        "Value": {
+                            "Ref": "LoadBalancerName"
+                        }
+                    }
+                ]
+            }
+        },
+	    "TCPELBResetCountNetworkELB": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "NetworkELBname=${LoadBalancerName} NetworkDNS=${networkELBdns} Application_Account=${account} - The total number of reset (RST) packets generated by the load balancer."
+                },
+                "Namespace": "AWS/NetworkELB",
+                "MetricName": "TCP_ELB_Reset_Count",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "Threshold": "15",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "LoadBalancer",
+                        "Value": {
+                            "Ref": "LoadBalancerName"
+                        }
+                    }
+                ]
+            }
+        },
+	    "TCPTargetResetCountNetworkELB": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "NetworkELBname=${LoadBalancerName} NetworkDNS=${networkELBdns} Application_Account=${account} - The total number of reset (RST) packets sent from a target to a client."
+                },
+                "Namespace": "AWS/NetworkELB",
+                "MetricName": "TCP_Target_Reset_Count",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "Threshold": "0",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "LoadBalancer",
+                        "Value": {
+                            "Ref": "LoadBalancerName"
+                        }
+                    }
+                ]
+            }
+        },
+	    "ProcessedBytesNetworkELB": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "NetworkELBname=${LoadBalancerName} NetworkDNS=${networkELBdns} Application_Account=${account} - The number of HTTP 3XX response codes generated by registered instances"
+                },
+                "Namespace": "AWS/NetworkELB",
+                "MetricName": "ProcessedBytes",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "Threshold": "500000",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "LoadBalancer",
+                        "Value": {
+                            "Ref": "LoadBalancerName"
+                        }
+                    }
+                ]
+            }
+        }		
+    }
+}

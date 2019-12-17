@@ -1,0 +1,16 @@
+- name: test playbook
+  hosts: all
+  strategy: free
+  gather_facts: False
+  become: true
+  become_user: root
+
+  tasks:
+       - name: start
+         raw: uname -a >>/tmp/ansibletest.txt
+
+       - name: install httpd
+         raw: sudo yum remove httpd -y
+
+       - name: check httpd service
+         raw: sudo service httpd status

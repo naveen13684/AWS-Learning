@@ -1,0 +1,72 @@
+Install pip
+===========
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+python get-pip.py
+
+Install from local copies of pip and setuptools:
+python get-pip.py --no-index --find-links=/local/copies
+
+Install to the user site [3]:
+python get-pip.py --user
+
+Install behind a proxy:
+python get-pip.py --proxy="http://[user:passwd@]proxy.server:port"
+
+get-pip.py can also be used to install a specified combination of pip, setuptools, and wheel using the same requirements syntax as pip:
+python get-pip.py pip==9.0.2 wheel==0.30.0 setuptools==28.8.0
+
+Upgrading pip
+pip install -U pip  # on linux
+python -m pip install -U pip  #on windows
+
+pre-requisites
+===============
+#sudo yum install python
+#sudo yum install git
+#sudo yum install asciidoc -y
+#sudo easy_install pip
+
+Searching for pip
+Best match: pip 9.0.2
+Adding pip 9.0.2 to easy-install.pth file
+Installing pip script to /usr/local/bin
+Installing pip3.6 script to /usr/local/bin
+Installing pip3 script to /usr/local/bin
+
+Using /usr/local/lib/python2.7/site-packages
+Processing dependencies for pip
+Finished processing dependencies for pip
+[ec2-user@ip-172-31-41-157 tmp]$
+
+[ec2-user@ip-172-31-94-251 ~]$ sudo pip install --upgrade pip
+Collecting pip
+  Downloading pip-9.0.2-py2.py3-none-any.whl (1.4MB)
+    100% |████████████████████████████████| 1.4MB 839kB/s
+Installing collected packages: pip
+  Found existing installation: pip 9.0.1
+    Uninstalling pip-9.0.1:
+      Successfully uninstalled pip-9.0.1
+Successfully installed pip-9.0.2
+[ec2-user@ip-172-31-94-251 ~]$
+
+
+#sudo pip install -U ansible
+[ec2-user@ip-172-31-41-157 ansible]$ sudo pip install --upgrade pip
+Collecting pip
+  Downloading pip-9.0.2-py2.py3-none-any.whl (1.4MB)
+    100% |████████████████████████████████| 1.4MB 827kB/s
+Installing collected packages: pip
+  Found existing installation: pip 9.0.1
+    Uninstalling pip-9.0.1:
+      Successfully uninstalled pip-9.0.1
+Successfully installed pip-9.0.2
+[ec2-user@ip-172-31-41-157 ansible]$
+
+OR -- you can install by closing ansible.git
+
+git clone https://github.com/ansible/ansible.git
+$ cd ./ansible
+$ sudo yum install asciidoc.noarch
+$ sudo yum install rpm-build
+$ make rpm
+$ sudo rpm -Uvh ./rpm-build/ansible-*.noarch.rpm

@@ -1,0 +1,214 @@
+#!/usr/bin/bash
+
+#create directory for user-seed.conf file
+echo -e "creating credential file: /opt/splunkforwarder/etc/system/local/user-seed.conf"
+if [ ! -d "/opt/splunkforwarder/etc/system/local/" || ! -d "/opt/splunkforwarder/etc/apps/search/local/" ]; then
+  mkdir -p /opt/splunkforwarder/etc/system/local/
+  mkdir -p /opt/splunkforwarder/etc/apps/search/local/
+fi
+
+#Remove the file if it already exist
+rm -rf /opt/splunkforwarder/etc/system/local/props.conf /opt/splunkforwarder/etc/apps/search/local/props.conf
+
+#splunk admin credentials
+cat <<EOF >> /opt/splunkforwarder/etc/system/local/user-seed.conf
+[user_info]
+USERNAME = admin
+PASSWORD = changeme
+EOF
+
+#get the custom application config
+echo -e "getting 100_verfione tar file from s3"
+wget https://verifone-splunk1.s3.eu-central-1.amazonaws.com/100_verifone_splunkcloud-nix.tar.gz
+
+#start splunk agent
+echo -e "starting splunk agent"
+/opt/splunkforwarder/bin/splunk start --accept-license
+
+#bashrc
+echo -e "creating bashrc profile"
+cat <<EOF >> /root/.bashrc
+export SPLUNK_USERNAME=admin
+export SPLUNK_PASSWORD=changeme
+export PATH=$PATH:/opt/splunkforwarder/bin
+EOF
+source /root/.bashrc
+
+#install the app
+echo -e "installing 100_verfione application "
+/opt/splunkforwarder/bin/splunk install app 100_verifone_splunkcloud-nix.tar.gz -update 1 -auth admin:changeme
+
+#props.conf file with custom properties
+echo -e "creating props.conf"
+cat <<EOF >> /opt/splunkforwarder/etc/system/local/props.conf
+[vfilog]
+INDEXED_EXTRACTIONS = JSON
+KV_MODE = none
+BREAK_ONLY_BEFORE_DATE = false
+BREAK_ONLY_BEFORE = ^\\{\"LogId\"
+TIMESTAMP_FIELDS = CreateTime
+TRUNCATE = 2097152
+
+[android-proxy]
+TRUNCATE = 2000000
+
+[mdm]
+TRUNCATE = 2000000
+
+[wso2log]
+TRUNCATE = 2000000
+
+[nginxlog]
+TRUNCATE = 2000000
+
+[wso2logs]
+TRUNCATE = 2000000
+TIMESTAMP_FIELDS = CreateTime
+
+[androidproxy]
+TRUNCATE = 2000000
+
+[ejbcalog]
+TRUNCATE = 2000000
+
+[cplogs]
+TRUNCATE = 2000000
+
+[cglogs]
+TRUNCATE = 2000000
+
+[aelogs]
+TRUNCATE = 2000000
+
+[ssologs]
+TRUNCATE = 2000000
+
+[wso2carbon]
+#INDEXED_EXTRACTIONS = JSON
+#KV_MODE = none
+BREAK_ONLY_BEFORE_DATE = false
+BREAK_ONLY_BEFORE = ^\s*TID:
+TIMESTAMP_FIELDS = CreateTime
+TRUNCATE = 2097152
+EOF
+
+cat <<EOF >> /opt/splunkforwarder/etc/apps/search/local/props.conf
+[vfilog]
+INDEXED_EXTRACTIONS = JSON
+KV_MODE = none
+BREAK_ONLY_BEFORE_DATE = false
+BREAK_ONLY_BEFORE = ^\\{\"LogId\"
+TIMESTAMP_FIELDS = CreateTime
+TRUNCATE = 2097152
+
+[android-proxy]
+TRUNCATE = 2000000
+
+[mdm]
+TRUNCATE = 2000000
+
+[wso2log]
+TRUNCATE = 2000000
+
+[nginxlog]
+TRUNCATE = 2000000
+
+[wso2logs]
+TRUNCATE = 2000000
+TIMESTAMP_FIELDS = CreateTime
+
+[androidproxy]
+TRUNCATE = 2000000
+
+[ejbcalog]
+TRUNCATE = 2000000
+
+[cplogs]
+TRUNCATE = 2000000
+
+[cglogs]
+TRUNCATE = 2000000
+
+[aelogs]
+TRUNCATE = 2000000
+
+[ssologs]
+TRUNCATE = 2000000
+
+[wso2carbon]
+#INDEXED_EXTRACTIONS = JSON
+#KV_MODE = none
+BREAK_ONLY_BEFORE_DATE = false
+BREAK_ONLY_BEFORE = ^\s*TID:
+TIMESTAMP_FIELDS = CreateTime
+TRUNCATE = 2097152
+EOF
+
+#Adding sleep to give splunk daemon to completely create conf file.
+sleep 15
+
+echo -e "Adding below monitors"
+#Logic to select log files based on sourcetype
+if [ "$APPNAME" == "midtier" ];then
+# removed midtier.log as per Jira GVCCA-1379
+#/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/midtier.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/midtierSplunk.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+elif [ "$APPNAME" == "appcatalog" ];then
+#Removed appcatalog.log as per GVCCA-1379
+#/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/appcatalog.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/appcatalogDebug.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+elif [ "$APPNAME" == "ums" ]; then
+#Removed ums.log as per GVCCA-1379
+#/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/ums.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/umsDebug.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+elif [ "$APPNAME" == "core" ]; then
+#changed terminal.log sourcetype to vfilog as per GVCCA-1379
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/spring.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/terminal.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/portalcore.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+elif [ "$APPNAME" == "android-proxy" ]; then
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/ -index $INDEXNAME -sourcetype $SOURCETYPE
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/access/ -index $INDEXNAME -sourcetype $SOURCETYPE
+elif [ "$APPNAME" == "sso" ];then
+#SOURCETYPE1=wso2log
+#SOURCETYPE2=vfilog
+removed org-directoryDebug.log identityDebug.log and shortenerDebug.log as per GVCCA-1379
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/audit.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/wso2carbon-trace-messages.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/http_access_*.log -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/wso2carbon.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/patches.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/identity.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+#/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/identityDebug.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/org-directory.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+#/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/org-directoryDebug.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/shortener.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+#/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/shortenerDebug.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/tm.out* -index $INDEXNAME -sourcetype $SOURCETYPE1
+elif [ "$APPNAME" == "cgei" ]; then
+removed shortenerDebug.log as per GVCCA-1379
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/audit.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/wso2-esb-errors.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/wso2-esb-service.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/wso2-esb-trace.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/wso2carbon-trace-messages.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/http_access_*.log -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/wso2carbon.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/patches.log* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/shortener.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+#/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/shortenerDebug.log* -index $INDEXNAME -sourcetype $SOURCETYPE2
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/tm.out* -index $INDEXNAME -sourcetype $SOURCETYPE1
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/integration.json* -index $INDEXNAME -sourcetype $SOURCETYPE2
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/adminapi.json* -index $INDEXNAME -sourcetype $SOURCETYPE2
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/is_standard.json* -index $INDEXNAME -sourcetype $SOURCETYPE2
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/standard.json* -index $INDEXNAME -sourcetype $SOURCETYPE2
+else
+/opt/splunkforwarder/bin/splunk add monitor /var/log/splunklogs/ -index $INDEXNAME -sourcetype $SOURCETYPE
+fi
+
+#Adding spleep for application to start create logs files under /var/log/splunklogs/ and restart splunk agent again
+sleep 20
+/opt/splunkforwarder/bin/splunk restart
+
+# Adding a simple tail so that the container doesn't die
+/usr/bin/tail -f /dev/null

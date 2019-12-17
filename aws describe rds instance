@@ -1,0 +1,17 @@
+[root@ip-10-178-144-5 ~]# aws rds describe-db-instances --query 'DBInstances[*].[DBName,DBClusterIdentifier,DBInstanceIdentifier]'
+[
+    [
+        "cp",
+        "eu-dev-ssoard-cluster",
+        "eu-dev-ssoard"
+    ],
+    [
+        "cp",
+        "eu-qasso-cluster",
+        "eu-qasso"
+    ]
+]
+[root@ip-10-178-144-5 ~]# aws rds describe-db-instances --query 'DBInstances[*].[DBName,DBClusterIdentifier,DBInstanceIdentifier]' --output=text
+cp      eu-dev-ssoard-cluster   eu-dev-ssoard
+cp      eu-qasso-cluster        eu-qasso
+[root@ip-10-178-144-5 ~]#

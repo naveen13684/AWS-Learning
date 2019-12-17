@@ -1,0 +1,29 @@
+- name: create rds instance
+  hosts: all
+  strategy: free
+  gather_facts: False
+  become: true
+  become_user: root
+
+  tasks:
+     - name: create rds instance
+       rds:
+         command: create
+         instance_name: masterDB
+         db_name: opencartDB
+         engine_version: 5.6.39
+         db_engine: MySQL
+         port: 3306
+         publicly_accessible: yes
+         region: us-east-1
+         multi_zone: no
+         size: 20
+         instance_type: db.t2.micro
+         license_model: general-public-license
+         #security_groups: naveen-securiy
+         vpc_security_groups: sg-57ef2c21
+         username: root
+         password: root12345
+         tags:
+            Environment: testing
+            Application: opencart

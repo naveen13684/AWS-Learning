@@ -1,0 +1,14 @@
+- name: put file into s3 bucket
+  hosts: all
+  strategy: free
+  gather_facts: False
+  become: true
+  become_user: root
+
+  tasks:
+     - name: Simple PUT operation
+       s3:
+         bucket: nknk
+         object: s3.yml
+         src: /etc/ansible/playbooks/s3.yml
+         mode: put

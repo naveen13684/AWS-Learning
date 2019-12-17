@@ -1,0 +1,30 @@
+[nginx:vars]
+ansible_ssh_private_key_file = <YOUR PRIVATE KEY LOCATION>
+[app:vars]
+ansible_ssh_private_key_file = <YOUR 2nd PRIVATE KEY LOCATION>
+
+[nginx:children]
+nginx_servers
+
+[app:children]
+app_servers
+
+[nginx_servers]
+1.2.3.4
+[app_servers]
+5.5.5.5
+6.6.6.6
+
+
+
+$ cat hosts.ini
+
+[server1]
+54.1.2.3 ansible_ssh_private_key_file=~/.ssh/server1.pem
+
+[testservers]
+ec2-54-2-3-4.compute-1.amazonaws.com ansible_ssh_private_key_file=~/.ssh/aws-testserver.pem ansible_ssh_user=ubuntu
+ec2-54-2-3-5.compute-1.amazonaws.com ansible_ssh_private_key_file=~/.ssh/aws-testserver.pem ansible_ssh_user=ubuntu
+
+[piwall]
+10.0.0.88 ansible_ssh_private_key_file=~/.ssh/raspberrypi.pem ansible_ssh_user=pi

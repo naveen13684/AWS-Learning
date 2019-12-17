@@ -1,0 +1,506 @@
+updating resources
+===================
+kubectl set image deployment/frontend www=image:v2               # Rolling update "www" containers of "frontend" deployment, updating the image
+kubectl rollout undo deployment/frontend                         # Rollback to the previous deployment
+kubectl rollout status -w deployment/frontend                    # Watch rolling update status of "frontend" deployment until completion
+
+# deprecated starting version 1.11
+kubectl rolling-update frontend-v1 -f frontend-v2.json           # (deprecated) Rolling update pods of frontend-v1
+kubectl rolling-update frontend-v1 frontend-v2 --image=image:v2  # (deprecated) Change the name of the resource and update the image
+kubectl rolling-update frontend --image=image:v2                 # (deprecated) Update the pods image of frontend
+kubectl rolling-update frontend-v1 frontend-v2 --rollback        # (deprecated) Abort existing rollout in progress
+
+cat pod.json | kubectl replace -f -                              # Replace a pod based on the JSON passed into std
+
+# Force replace, delete and then re-create the resource. Will cause a service outage.
+kubectl replace --force -f ./pod.json
+
+# Create a service for a replicated nginx, which serves on port 80 and connects to the containers on port 8000
+kubectl expose rc nginx --port=80 --target-port=8000
+
+# Update a single-container pod's image version (tag) to v4
+kubectl get pod mypod -o yaml | sed 's/\(image: myimage\):.*$/\1:v4/' | kubectl replace -f -
+
+kubectl label pods my-pod new-label=awesome                      # Add a Label
+kubectl annotate pods my-pod icon-url=http://goo.gl/XXBTWq       # Add an annotation
+kubectl autoscale deployment foo --min=2 --max=10                # Auto scale a deployment "foo"
+
+checking pod logs
+======================
+kubectl logs ${POD_NAME} ${CONTAINER_NAME}
+
+If your container has previously crashed, you can access the previous container’s crash log with:
+kubectl logs --previous ${POD_NAME} ${CONTAINER_NAME}
+
+Delete all evicted pods
+=======================
+kubectl get pods | grep Evicted | awk '{print $1}' | xargs kubectl delete pod
+
+force delte pod with unkown state
+==================================
+kubectl delete pods devnginxcore-dev-8f688bc6d-jc5bt --grace-period=0 --force
+
+[root@ip-10-178-104-126 ~]# kubectl delete pods --grace-period=0 --force midtier-stg-799c5bd7ff-qwn4f midtier-stg-799c5bd7ff-4sdz9
+warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.
+pod "midtier-stg-799c5bd7ff-qwn4f" deleted
+pod "midtier-stg-799c5bd7ff-4sdz9" deleted
+[root@ip-10-178-104-126 ~]#
+
+how to change the default namespace for kubectl commands
+========================================================
+kubectl config set-context $(kubectl config current-context) --namespace=default
+
+patching resources
+==================
+kubectl patch node k8s-node-1 -p '{"spec":{"unschedulable":true}}' # Partially update a node
+
+# Update a container's image; spec.containers[*].name is required because it's a merge key
+kubectl patch pod valid-pod -p '{"spec":{"containers":[{"name":"kubernetes-serve-hostname","image":"new image"}]}}'
+
+# Update a container's image using a json patch with positional arrays
+kubectl patch pod valid-pod --type='json' -p='[{"op": "replace", "path": "/spec/containers/0/image", "value":"new image"}]'
+
+# Disable a deployment livenessProbe using a json patch with positional arrays
+kubectl patch deployment valid-deployment  --type json   -p='[{"op": "remove", "path": "/spec/template/spec/containers/0/livenessProbe"}]'
+
+# Add a new element to a positional array 
+kubectl patch sa default --type='json' -p='[{"op": "add", "path": "/secrets/1", "value": {"name": "whatever" } }]'
+
+scaling resources
+==================
+
+kubectl scale --replicas=3 rs/foo                                 # Scale a replicaset named 'foo' to 3
+kubectl scale --replicas=3 -f foo.yaml                            # Scale a resource specified in "foo.yaml" to 3
+kubectl scale --current-replicas=2 --replicas=3 deployment/mysql  # If the deployment named mysql's current size is 2, scale mysql to 3
+kubectl scale --replicas=5 rc/foo rc/bar rc/baz                   # Scale multiple replication controllers
+
+deleting resources
+==================
+kubectl delete -f ./pod.json                                              # Delete a pod using the type and name specified in pod.json
+kubectl delete pod,service baz foo                                        # Delete pods and services with same names "baz" and "foo"
+kubectl delete pods,services -l name=myLabel                              # Delete pods and services with label name=myLabel
+kubectl delete pods,services -l name=myLabel --include-uninitialized      # Delete pods and services, including uninitialized ones, with label name=myLabel
+kubectl -n my-ns delete po,svc --all                                      # Delete all pods and services, including uninitialized ones, in namespace my-ns,
+# Delete all pods matching the awk pattern1 or pattern2
+kubectl get pods  -n mynamespace --no-headers=true | awk '/pattern1|pattern2/{print $1}' | xargs  kubectl delete -n mynamespace pod
+
+checking logs 
+==============
+
+kubectl logs my-pod                                 # dump pod logs (stdout)
+kubectl logs -l name=myLabel                        # dump pod logs, with label name=myLabel (stdout)
+kubectl logs my-pod --previous                      # dump pod logs (stdout) for a previous instantiation of a container
+kubectl logs my-pod -c my-container                 # dump pod container logs (stdout, multi-container case)
+kubectl logs -l name=myLabel -c my-container        # dump pod logs, with label name=myLabel (stdout)
+kubectl logs my-pod -c my-container --previous      # dump pod container logs (stdout, multi-container case) for a previous instantiation of a container
+kubectl logs -f my-pod                              # stream pod logs (stdout)
+kubectl logs -f my-pod -c my-container              # stream pod container logs (stdout, multi-container case)
+kubectl logs -f -l name=myLabel --all-containers    # stream all pods logs with label name=myLabel (stdout)
+kubectl run -i --tty busybox --image=busybox -- sh  # Run pod as interactive shell
+kubectl attach my-pod -i                            # Attach to Running Container
+kubectl port-forward my-pod 5000:6000               # Listen on port 5000 on the local machine and forward to port 6000 on my-pod
+kubectl exec my-pod -- ls /                         # Run command in existing pod (1 container case)
+kubectl exec my-pod -c my-container -- ls /         # Run command in existing pod (multi-container case)
+kubectl top pod POD_NAME --containers               # Show metrics for a given pod and its containers
+
+create config map
+==================
+kubectl create configmap naveentest --namespace=jenkins --from-file=/root/midtier/conf -o yaml --dry-run
+
+how to restart POD
+===================
+
+kubectl scale deployment <<name>> --replicas=0 -n service 
+kubectl scale deployment <<name>> --replicas=2 -n service
+
+switch context
+=============
+kubectl config get-contexts
+kubectl config current-context
+kubectl config  use-context arn:aws:eks:eu-central-1:856279758674:cluster/eu-dev-cg
+
+[jenkins@ip-10-177-112-28 .kube]$ kubectl config  use-context arn:aws:eks:eu-central-1:856279758674:cluster/eu-dev-cg
+Switched to context "arn:aws:eks:eu-central-1:856279758674:cluster/eu-dev-cg".
+[jenkins@ip-10-177-112-28 .kube]$
+
+   24  kubectl config current-context
+   27  kubectl config  use-context arn:aws:eks:eu-central-1:549615285520:cluster/eu-np-cmn
+   34  history |grep -i context
+   
+   
+   command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+   
+   sudheerg1@verifone.com
+   Microland@bng9
+   
+config map dry-run
+===================   
+kubectl create configmap naveentest --namespace=jenkins --from-file=/root/midtier/conf -o yaml --dry-run   
+   
+script to delete all Evicted POD's
+==================================
+for pod in `kubectl get po|grep -i Evicted | awk '{print $1}'`;do kubectl delete po $pod ; done
+for pod in `kubectl get po -n default|grep -i Evicted | awk '{print $1}'`;do kubectl delete po $pod -n default ; done
+
+Start Stop delete Minikube
+=========================
+minikube start
+starts minikube. If this hangs (wait 15 minutes), then see the video in section 3
+that addresses common problems
+
+minikube stop
+(Section 3): stops the minikube virtual machine. This may be necessary to do if
+you have an error when starting
+
+minikube delete
+(Section 3): do this to completely wipe away the minikube image. Useful if
+minikube is refusing to start and all else fails. Also you can delete all files in
+<home>/.minikube and <home>/.kube
+
+minikube env
+(Section 4): find out the required environment variables to connect to
+the docker daemon running in minikube.
+
+minikube ip
+(Section 4 or 5): find out the ip address of minikube. Needed for
+browser access.
+
+
+Kubectl
+=========
+
+kubectl get all
+(Section 5): list all objects that you’ve created. Pods at first, later,
+ReplicaSets, Deployments and Services
+
+kubectl apply –f <yaml file>
+
+(Section 5): either creates or updates resources depending on the
+contents of the yaml file
+
+kubectl apply –f .
+
+(Section 7): apply all yaml files found in the current directory
+Kubernetes - Quick Command Reference 2
+
+kubectl describe pod <name of pod>
+
+(Section 5): gives full information about the specified pod
+
+kubectl exec –it <pod name> <command>
+
+(Section 5): execute the specified command in the pod’s container.
+Doesn’t work well in Cygwin.
+kubectl get (pod | po | service | svc | rs | replicaset | deployment |
+deploy)
+
+(Section 6): get all pods or services. Later in the course, replicasets and
+deployments.
+
+kubectl get po --show-labels
+
+(Section 6): get all pods and their labels
+
+kubectl get po --show-labels -l {name}={value}
+
+(Section 6): get all pods matching the specified name:value pair
+
+kubectl delete po <pod name>
+
+(Section 8): delete the named pod. Can also delete svc, rs, deploy
+
+kubectl delete po --all
+
+(Section 8): delete all pods (also svc, rs, deploy)
+
+Deployment Management
+
+kubectl rollout status deploy <name of deployment>
+
+(Section 9): get the status of the named deployment
+
+kubectl rollout history deploy <name of deployment>
+
+(Section 9): get the previous versions of the deployment
+
+kubectl rollout undo deploy <name of deployment>
+
+(Section 9): go back one version in the deployment. Also optionally --
+to-revision=<revision number>
+
+We recommend this is used only in stressful emergency situations! Your
+YAML will now be out of date with the live deployment! 
+=============================
+
+Enabling DNS resolution for Amazon EKS cluster endpoints
+=====================
+https://aws.amazon.com/blogs/compute/enabling-dns-resolution-for-amazon-eks-cluster-endpoints/   
+
+
+How do I associate a Route 53 private hosted zone with a VPC on a different AWS account?
+============================
+https://aws.amazon.com/premiumsupport/knowledge-center/private-hosted-zone-different-account/
+
+EFS NFS mount AWS
+==================
+mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 10.177.114.77:/ /test
+mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-d65d6d8f.efs.eu-central-1.amazonaws.com:/ /test
+
+splunk http driver
+==================
+https://www.splunk.com/blog/2015/12/16/splunk-logging-driver-for-docker.html
+
+how to increase AWS quota automatically
+=====================================
+https://console.aws.amazon.com/servicequotas/home?region=us-east-1#!/dashboard
+
+config map  update
+=========
+kubectl create configmap foo --from-file foo.properties -o yaml --dry-run | kubectl replace -f -
+
+check containers inside pod
+==========================
+kubectl get pods wso2is-6ff9c7fdbf-5qvgm -o jsonpath='{.spec.containers[*].name}'
+
+[root@ip-10-178-96-90 ~]# kubectl get pods -o=custom-columns=NAME:.metadata.name,CONTAINERS:.spec.containers[*].name
+NAME                      CONTAINERS
+wso2is-6ff9c7fdbf-5qvgm   wso2is,splunk-sidecar
+wso2is-6ff9c7fdbf-jtmwq   wso2is,splunk-sidecar
+wso2is-798d898cd5-6cvlh   wso2is,splunk-sidecar
+[root@ip-10-178-96-90 ~]#
+
+==================================
+How to find out dependancy images when docker rmi is failing
+============================================================
+
+[root@ip-10-178-112-67 ~]# docker images
+REPOSITORY                                                  TAG                   IMAGE ID            CREATED             SIZE
+<none>                                                      <none>                8c03ff31e486        4 seconds ago       447MB
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/splunk-sc   v1                    484279d09236        18 hours ago        447MB
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/stgcg       staging1core-1.1.63   391d0ceb0819        2 months ago        1.31GB
+staging1core-1.1.63                                         latest                391d0ceb0819        2 months ago        1.31GB
+[root@ip-10-178-112-67 ~]# docker rm 935ca9bc8593
+935ca9bc8593
+[root@ip-10-178-112-67 ~]# docker rmi 484279d09236
+Error response from daemon: conflict: unable to delete 484279d09236 (cannot be forced) - image has dependent child images
+[root@ip-10-178-112-67 ~]# docker
+[root@ip-10-178-112-67 ~]# docker images --filter "dangling=true" -q --no-trunc
+sha256:8c03ff31e486cc4b3dabae239a602a684d3a39dcd5319131674bfc0aede9ded3
+[root@ip-10-178-112-67 ~]#
+
+Curl command used to call build form CI jenkins 
+===============================================
+curl -X POST http://35.169.83.11/jobs/job/deploy-app-to-dev56sso/build --user flux7:26702fadcdkjjkgkjhagsdff709 --data-urlencode json='{"parameter":[{"name":"JOB_ID","value":"'"${BUILD_NUMBER}"'"},{"name":"BUILD_NUMBER","value":"'"${APP_VERSION}"'"}]}'
+
+===================================================
+
+Enable the DNS Resoulution for VPC
+
+https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-updating
+======================================================
+
+Kube Proxy
+==========
+kubectl set image daemonset.apps/kube-proxy \
+-n kube-system \
+kube-proxy=602401143452.dkr.ecr.us-west-2.amazonaws.com/eks/kube-proxy:v1.13.8
+
+
+Installing coredns
+===================
+kubectl get pod -n kube-system -l k8s-app=kube-dns
+
+kubectl get pod -n kube-system -l k8s-app=kube-dns
+
+kubectl patch -n kube-system deployment/kube-dns --patch \
+'{"spec":{"selector":{"matchLabels":{"eks.amazonaws.com/component":"kube-dns"}}}}'
+
+export DNS_CLUSTER_IP=$(kubectl get svc -n kube-system kube-dns -o jsonpath='{.spec.clusterIP}')
+
+export REGION="eu-central-1"
+
+curl -o dns.yaml https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/dns.yaml
+
+cat dns.yaml | sed -e "s/REGION/$REGION/g" | sed -e "s/DNS_CLUSTER_IP/$DNS_CLUSTER_IP/g" | kubectl apply -f -
+
+COREDNS_POD=$(kubectl get pod -n kube-system -l eks.amazonaws.com/component=coredns \
+-o jsonpath='{.items[0].metadata.name}')
+
+kubectl get --raw /api/v1/namespaces/kube-system/pods/$COREDNS_POD:9153/proxy/metrics \
+| grep 'coredns_dns_request_count_total'
+
+kubectl scale -n kube-system deployment/kube-dns --replicas=0
+
+kubectl delete -n kube-system deployment/kube-dns serviceaccount/kube-dns configmap/kube-dns
+
+kubectl describe deployment coredns --namespace kube-system | grep Image | cut -d "/" -f 3
+
+kubectl set image --namespace kube-system deployment.apps/coredns \
+coredns=602401143452.dkr.ecr.us-west-2.amazonaws.com/eks/coredns:v1.2.6
+
+
+CNI
+===
+kubectl describe daemonset aws-node --namespace kube-system | grep Image | cut -d "/" -f 2
+
+kubectl apply -f https://raw.githubusercontent.com/aws/amazon-vpc-cni-k8s/release-1.5/config/v1.5/aws-k8s-cni.yaml
+
+
+curl -X POST https://jenkins:fb70dcb637658061a2d5050ddc608964@nonprod-aws.jenkins.verifonecp.com/jobs/job/database-run-scripts/buildWithParameters?ENV=dev'&'DB_
+ACTION=$DB_ACTION
+
+aws rds describe-db-instances --db-instance-identifier eu-dev-ssoard
+aws rds describe-db-instances --query 'DBInstances[*].[DBName,DBClusterIdentifier,DBInstanceIdentifier]' --output=text
+
+
+aws rds describe-db-instances --region=eu-central-1 --query 'DBInstances[*].[DBName]' --output=text
+
+
+aws ec2 describe-instances --region=$region  --query 'Reservations[].Instances[].[InstanceId]' --output text
+
+aws elbv2 describe-target-groups --query  'TargetGroups[*].[TargetGroupArn,LoadBalancerArns]' --output=text
+
+aws elbv2 describe-load-balancers --query 'LoadBalancers[*].[LoadBalancerArn]' --output text
+
+aws elbv2 describe-load-balancers --query 'LoadBalancers[*].[LoadBalancerArn]' --output text|cut -d "/" -f2-4
+
+aws elbv2 describe-load-balancers --query 'LoadBalancers[*].[LoadBalancerArn]' --output text |xargs -I {} aws elbv2 describe-target-groups --load-balancer-arn {
+} --query 'TargetGroups[].TargetGroupName' --output text
+
+aws elbv2 describe-target-groups --load-balancer-arn $networkELBdns --query 'TargetGroups[].TargetGroupName' --output text
+
+aws elbv2 describe-target-groups --load-balancer-arn arn:aws:elasticloadbalancing:eu-central-1:549615285520:loadbalancer/net/a6b7c395b613011e980b9062b2956a2d/0e
+8bd33037b81a9e --query 'TargetGroups[].TargetGroupArn' --output text
+
+aws elb describe-load-balancers |grep -i "LoadBalancerName"|cut -d "\"" -f4
+aws elbv2 describe-load-balancers --output=text|awk '{print $7}'|grep -v '^[[:space:]]*$'
+
+
+CLB : LoadBalancerName
+aws cloudwatch list-metrics --namespace AWS/ApplicationELB
+
+ALB : LoadBalancer
+aws cloudwatch list-metrics --namespace AWS/ApplicationELB
+
+NLB : LoadBalancer
+aws cloudwatch list-metrics --namespace AWS/NetworkELB
+
+aws elb describe-load-balancers --query 'LoadBalancerDescriptions[*].[LoadBalancerName,DNSName,]' --output=text
+aws elbv2 describe-load-balancers --query 'LoadBalancers[*].[LoadBalancerName,DNSName,Type]' --output=text
+
+aws elbv2 describe-load-balancers --query 'LoadBalancers[*].[LoadBalancerArn]' --output=text |cut -d "/" -f2-4
+
+aws elbv2 describe-load-balancers --query 'LoadBalancers[*].[LoadBalancerArn]' --output text |xargs -I {} aws elbv2 describe-target-groups --load-balancer-arn {
+} --query 'TargetGroups[].TargetGroupName' --output text
+
+
+ClassicELB
+-bash-4.2$ aws elb describe-load-balancers|grep -i DNSName
+            "DNSName": "abf298f1d7cbf11e980b9062b2956a2d-304358943.eu-central-1.elb.amazonaws.com",
+            "DNSName": "abf2cdd0c7cbf11e980b9062b2956a2d-687008638.eu-central-1.elb.amazonaws.com",
+            "DNSName": "cp-jenkins-1602284280.eu-central-1.elb.amazonaws.com",
+			
+NetworkELB			
+-bash-4.2$ aws elbv2 describe-load-balancers |grep -i DNSName
+            "DNSName": "a6b7c395b613011e980b9062b2956a2d-0e8bd33037b81a9e.elb.eu-central-1.amazonaws.com",
+            "DNSName": "ad416da26507111e9a80f022f373db9b-6e6d6c11c3c1b1ea.elb.eu-central-1.amazonaws.com",
+            "DNSName": "a73aaa4284d7711e9a80f022f373db9b-fb7dd103141d8e15.elb.eu-central-1.amazonaws.com",
+-bash-4.2$
+
+
+====================================================
+
+Generate dokcer file from image
+
+docker pull chenzj/dfimage
+alias dfimage="docker run -v /var/run/docker.sock:/var/run/docker.sock --rm repositoryjp/nginx-1.8.0:latest"
+dfimage IMAGE_ID > Dockerfile
+
+==================================
+
+
+chaining age of user in linux
+==============================
+for i in `cat user`
+chage -I -1 -m 0 -M 99999 -E -1 $i
+done
+
+list duplicate versions of rpm
+================================
+yum --showduplicates list java-1.7.0-openjdk-devel
+
+
+how to pull docker file from image_id
+=======================================
+docker pull chenzj/dfimage
+alias dfimage="docker run -v /var/run/docker.sock:/var/run/docker.sock --rm chenzj/dfimage"
+dfimage image_id
+
+========================================
+aws sns subscribe --topic-arn arn:aws:sns:us-west-2:0123456789012:my-topic --protocol email --notification-endpoint my-email@example.com
+
+aws sns subscribe --topic-arn $SNS_TOPIC --protocol email --notification-endpoint i.AWS.DevOps.Support@SMOKESTACK.VERIFONE.com
+
+aws sns subscribe --topic-arn $SNS_TOPIC  --protocol email --notification-endpoint i.vcs.global.aws@SMOKESTACK.VERIFONE.com
+
+aws sns subscribe --topic-arn $SNS_TOPIC  --protocol email --notification-endpoint i.vcs.itoc@verifone.com
+==========================================
+
+
+packer validate  --var ami_name=amazon-eks-node-1.10-v20190828    --var kubernetes_version=1.10.13  --var kubernetes_build_date=2019-03-27          --var arch=x86_64  --var
+ instance_type=m4.large eks-worker-al2.json
+Template validated successfully.
+\e[0;32mBuilding AMI for version \e[0;33m1.10.13\e[0;32m on \e[0;33mx86_64\e[0m
+packer build  --var ami_name=amazon-eks-node-1.10-v20190828    --var kubernetes_version=1.10.13  --var kubernetes_build_date=2019-03-27          --var arch=x86_64  --var in
+stance_type=m4.large eks-worker-al2.json
+
+
+kubernetes_version=1.13.7
+kubernetes_build_date=2019-06-11
+
+EFS mount
+===============
+mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 10.177.114.6:/ /test
+mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-d65d6d8f.efs.eu-central-1.amazonaws.com:/ /test
+
+mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 10.177.114.119:/ /test1
+
+===============
+
+Blue green , canary deployment
+
+https://dev.to/mostlyjason/intro-to-deployment-strategies-blue-green-canary-and-more-3a3
+
+
+==================================================
+
+KMS encrypt and decrypt
+
+
+
+Encrypt:
+========
+aws kms encrypt --key-id 1234abcd-12ab-34cd-56ef-1234567890ab --plaintext fileb://ExamplePlaintextFile --output text --query CiphertextBlob | base64 --decode > ExampleEncryptedFile
+
+aws kms encrypt --key-id 61d73fa6-3a56-4cbc-a6fa-05cb5a6a2acc --plaintext fileb://splunk.txt --output text --query CiphertextBlob | base64 --decode > splunk_encrypted.txt
+
+Decrypt:
+=======
+aws kms decrypt --ciphertext-blob fileb://ExampleEncryptedFile --output text --query Plaintext | base64 --decode > ExamplePlaintextFile
+
+aws kms decrypt --ciphertext-blob fileb://splunk_encrypted.txt --output text --query Plaintext | base64 --decode > splunk_decrypted.txt
+
+
+How to just update image of perticular container
+==================================================
+kubectl set image deployment/my-deployment mycontainer=myimage:latest
+
+[root@ip-10-178-120-70 ~]# kubectl set image deployment/certificaterequest-stg splunk-sidecar=549615285520.dkr.ecr.eu-central-1.amazonaws.com/splunk-sc:v31
+deployment.apps "certificaterequest-stg" image updated
+[root@ip-10-178-120-70 ~]# kubectl set image deployment/mdm-stg splunk-sidecar=549615285520.dkr.ecr.eu-central-1.amazonaws.com/splunk-sc:v31
+deployment.apps "mdm-stg" image updated
+[root@ip-10-178-120-70 ~]# kubectl set image deployment/sso-connector splunk-sidecar=549615285520.dkr.ecr.eu-central-1.amazonaws.com/splunk-sc:v31
+deployment.apps "sso-connector" image updated
+[root@ip-10-178-120-70 ~]# kubectl set image deployment/time-service splunk-sidecar=549615285520.dkr.ecr.eu-central-1.amazonaws.com/splunk-sc:v31
+deployment.apps "time-service" image updated
+[root@ip-10-178-120-70 ~]#

@@ -1,0 +1,123 @@
+Ansible
+=======
+Every YAML file optionally starts with “---” and ends with “...”.
+
+key-value pair
+===============
+--- #Optional YAML start syntax 
+james: 
+   name: james john 
+   rollNo: 34 
+   div: B 
+   sex: male 
+… #Optional YAML end syntax 
+
+OR
+
+James: {name: james john, rollNo: 34, div: B, sex: male}
+
+Representing List
+=================
+---
+countries:  
+   - America 
+   - China 
+   - Canada 
+   - Iceland 
+…
+
+OR
+
+Countries: [‘America’, ‘China’, ‘Canada’, ‘Iceland’]
+
+List inside Dictionaries
+========================
+---  
+james: 
+   name: james john 
+   rollNo: 34 
+   div: B 
+   sex: male 
+   likes: 
+      - maths 
+      - physics 
+      - english 
+… 
+
+List of Dictionaries
+====================
+---  
+- james: 
+   name: james john 
+   rollNo: 34 
+      div: B 
+   sex: male 
+   likes: 
+      - maths 
+      - physics 
+      - english 
+
+- robert: 
+      name: robert richardson 
+      rollNo: 53 
+      div: B 
+      sex: male 
+   likes: 
+      - biology 
+      - chemistry 
+…
+
+include and suppress new lines
+==============================
+
+YAML uses “|” to include newlines while showing multiple lines 
+		  “>” to suppress newlines while showing multiple lines. 
+Due to this we can read and edit large lines. In both the cases intendentation will be ignored.
+
+
+We can also represent Boolean (True/false) values in YAML. where boolean values can be case insensitive.
+
+
+---  
+- james: 
+   name: james john 
+   rollNo: 34 
+   div: B 
+   sex: male 
+   likes: 
+      - maths 
+      - physics 
+      - english 
+   
+   result: 
+      maths: 87 
+      chemistry: 45 
+      biology: 56 
+      physics: 70 
+      english: 80 
+   
+   passed: TRUE 
+   
+   messageIncludeNewLines: | 
+      Congratulation!! 
+      You passed with 79% 
+   
+   messageExcludeNewLines: > 
+      Congratulation!! 
+      You passed with 79% 
+
+
+$ ssh-agent bash 
+$ ssh-add ~/.ssh/id_rsa 
+
+1) To reboot all machines in a group 'abc' and fork 12 servers at a time.
+Ansible abc -a "/sbin/reboot" -f 12
+$ Ansible abc -a "/sbin/reboot" -f 12 -u username
+
+2) Copy a file
+$ Ansible abc -m copy -a "src = /etc/yum.conf dest = /tmp/yum.conf"
+
+3) Creating/Deleteting Directory
+$ Ansible abc -m file -a "dest = /path/user1/new mode = 777 owner = user1 group = user1 state = directory" 
+$ Ansible abc -m file -a "dest = /path/user1/new state = absent"
+

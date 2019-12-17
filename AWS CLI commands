@@ -1,0 +1,5 @@
+How to Create Placement groups
+===============================
+aws ec2 create-placement-group --group-name "naveenbrains" --strategy "cluster" --region us-east-1
+aws ec2 create-placement-group --group-name "naveenbrains" --strategy "spread" --region us-east-1
+

@@ -1,0 +1,2 @@
+aws s3 cp splunk.txt s3://verifone-deploy-new/test1/splunk.txt --sse aws:kms --sse-kms-key-id <KMS:ARN>
+aws s3 cp splunk.txt s3://verifone-deploy-new/test1/splunk.txt --sse aws:kms --sse-kms-key-id <KMSID>

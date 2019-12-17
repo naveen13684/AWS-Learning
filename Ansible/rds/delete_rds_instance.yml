@@ -1,0 +1,13 @@
+- name: delete rds instance
+  hosts: all
+  strategy: free
+  gather_facts: False
+  become: true
+  become_user: root
+
+  tasks:
+     - name: create rds instance
+       rds:
+         command: delete
+         instance_name: masterDB
+         region: us-east-1

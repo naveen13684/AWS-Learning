@@ -1,0 +1,294 @@
+
+AWS git hub:  https://github.com/awslabs/amazon-eks-ami
+
+clone it and change the eks-worker-al2.json file and update latest ami
+
+ami_block_device_mappings
+"source_ami_id": "ami-08f45bf9d58686a06",
+"source_ami_owners": "549615285520",
+Remove filters for AMI	
+	
+
+
+[root@ip-10-177-112-28 amazon-eks-ami]# make 1.13
+make k8s kubernetes_version=1.13.7 kubernetes_build_date=2019-06-11
+make[1]: Entering directory `/root/ami/amazon-eks-ami'
+packer validate  --var ami_name=amazon-eks-node-1.13-v20190829    --var kubernetes_version=1.13.7  --var kubernetes_build_date=2019-06-11          --var arch=x86_64  --var instance_type=m4.large eks-worker-al2.json
+Template validated successfully.
+\e[0;32mBuilding AMI for version \e[0;33m1.13.7\e[0;32m on \e[0;33mx86_64\e[0m
+packer build -on-error=ask  --var ami_name=amazon-eks-node-1.13-v20190829    --var kubernetes_version=1.13.7  --var kubernetes_build_date=2019-06-11          --var arch=x86_64  --var instance_type=m4.large eks-worker-al2.json
+amazon-ebs output will be in this color.
+
+==> amazon-ebs: Prevalidating AMI Name: amazon-eks-node-1.13-v20190829
+    amazon-ebs: Found Image ID: ami-08f45bf9d58686a06
+==> amazon-ebs: Creating temporary keypair: packer_5d6767da-031f-af75-457e-e47f196ed452
+==> amazon-ebs: Creating temporary security group for this instance: packer_5d6767de-8b6b-1d03-8fa3-f13c35301871
+==> amazon-ebs: Authorizing access to port 22 from [0.0.0.0/0] in the temporary security groups...
+==> amazon-ebs: Launching a source AWS instance...
+==> amazon-ebs: Adding tags to source instance
+    amazon-ebs: Adding tag: "creator": "root"
+    amazon-ebs: Adding tag: "Name": "Packer Builder"
+    amazon-ebs: Instance ID: i-04f2b0d5ca8c3a149
+==> amazon-ebs: Waiting for instance (i-04f2b0d5ca8c3a149) to become ready...
+==> amazon-ebs: Using ssh communicator to connect: 54.212.225.223
+==> amazon-ebs: Waiting for SSH to become available...
+==> amazon-ebs: Connected to SSH!
+==> amazon-ebs: Uploading /root/ami/amazon-eks-ami/files/ => /tmp/worker/
+==> amazon-ebs: Provisioning with shell script: /root/ami/amazon-eks-ami/install-worker.sh
+    amazon-ebs: Loaded plugins: update-motd
+    amazon-ebs: No packages marked for update
+    amazon-ebs: Loaded plugins: update-motd
+    amazon-ebs: Package aws-cfn-bootstrap-1.4-31.amzn2.noarch already installed and latest version
+    amazon-ebs: Package awscli-1.16.102-1.amzn2.0.1.noarch already installed and latest version
+    amazon-ebs: Package chrony-3.2-1.amzn2.0.5.x86_64 already installed and latest version
+    amazon-ebs: Package conntrack-tools-1.4.4-3.amzn2.0.2.x86_64 already installed and latest version
+    amazon-ebs: Package curl-7.61.1-11.amzn2.0.2.x86_64 already installed and latest version
+    amazon-ebs: Package jq-1.5-1.amzn2.0.2.x86_64 already installed and latest version
+    amazon-ebs: Package ec2-instance-connect-1.1-10.amzn2.noarch already installed and latest version
+    amazon-ebs: Package 1:nfs-utils-1.3.0-0.54.amzn2.0.2.x86_64 already installed and latest version
+    amazon-ebs: Package socat-1.7.3.2-2.amzn2.0.1.x86_64 already installed and latest version
+    amazon-ebs: Package unzip-6.0-19.amzn2.x86_64 already installed and latest version
+    amazon-ebs: Package wget-1.14-18.amzn2.1.x86_64 already installed and latest version
+    amazon-ebs: Nothing to do
+    amazon-ebs: Note: Forwarding request to 'systemctl enable chronyd.service'.
+    amazon-ebs: # This directive enables kernel synchronisation (every 11 minutes) of the
+    amazon-ebs: # real-time clock. Note that it can’t be used along with the 'rtcfile' directive.
+    amazon-ebs: rtcsync
+    amazon-ebs: tsc
+    amazon-ebs: Loaded plugins: update-motd
+    amazon-ebs: Package yum-utils-1.1.31-46.amzn2.0.1.noarch already installed and latest version
+    amazon-ebs: Package device-mapper-persistent-data-0.7.3-3.amzn2.x86_64 already installed and latest version
+    amazon-ebs: Package 7:lvm2-2.02.177-4.amzn2.0.2.x86_64 already installed and latest version
+    amazon-ebs: Nothing to do
+    amazon-ebs: Couldn't write catalog to cache.
+    amazon-ebs: [Errno 18] Invalid cross-device link
+    amazon-ebs: Couldn't write catalog to cache.
+    amazon-ebs: [Errno 18] Invalid cross-device link
+    amazon-ebs:   0  ansible2                 available    [ =2.4.2  =2.4.6 ]
+    amazon-ebs:   2  httpd_modules            available    [ =1.0 ]
+    amazon-ebs:   3  memcached1.5             available    [ =1.5.1  =1.5.16 ]
+    amazon-ebs:   4  nginx1.12                available    [ =1.12.2 ]
+    amazon-ebs:   5  postgresql9.6            available    [ =9.6.6  =9.6.8 ]
+    amazon-ebs:   6  postgresql10             available    [ =10 ]
+    amazon-ebs:   8  redis4.0                 available    [ =4.0.5  =4.0.10 ]
+    amazon-ebs:   9  R3.4                     available    [ =3.4.3 ]
+    amazon-ebs:  10  rust1                    available    \
+    amazon-ebs:         [ =1.22.1  =1.26.0  =1.26.1  =1.27.2  =1.31.0 ]
+    amazon-ebs:  11  vim                      available    [ =8.0 ]
+    amazon-ebs:  13  ruby2.4                  available    [ =2.4.2  =2.4.4 ]
+    amazon-ebs:  15  php7.2                   available    \
+    amazon-ebs:         [ =7.2.0  =7.2.4  =7.2.5  =7.2.8  =7.2.11  =7.2.13  =7.2.14
+    amazon-ebs:           =7.2.16  =7.2.17  =7.2.19 ]
+    amazon-ebs:  16  php7.1                   available    \
+    amazon-ebs:         [ =7.1.22  =7.1.25  =7.1.27  =7.1.28  =7.1.30 ]
+    amazon-ebs:  17  lamp-mariadb10.2-php7.2  available    \
+    amazon-ebs:         [ =10.2.10_7.2.0  =10.2.10_7.2.4  =10.2.10_7.2.5
+    amazon-ebs:           =10.2.10_7.2.8  =10.2.10_7.2.11  =10.2.10_7.2.13
+    amazon-ebs:           =10.2.10_7.2.14  =10.2.10_7.2.16  =10.2.10_7.2.17
+    amazon-ebs:           =10.2.10_7.2.19 ]
+    amazon-ebs:  18  libreoffice              available    [ =5.0.6.2_15  =5.3.6.1 ]
+    amazon-ebs:  19  gimp                     available    [ =2.8.22 ]
+    amazon-ebs:  20  docker=latest            enabled      \
+    amazon-ebs:         [ =17.12.1  =18.03.1  =18.06.1 ]
+    amazon-ebs:  21  mate-desktop1.x          available    [ =1.19.0  =1.20.0 ]
+    amazon-ebs:  22  GraphicsMagick1.3        available    [ =1.3.29  =1.3.32 ]
+    amazon-ebs:  23  tomcat8.5                available    \
+    amazon-ebs:         [ =8.5.31  =8.5.32  =8.5.38  =8.5.40  =8.5.42 ]
+    amazon-ebs:  24  epel                     available    [ =7.11 ]
+    amazon-ebs:  25  testing                  available    [ =1.0 ]
+    amazon-ebs:  26  ecs                      available    [ =stable ]
+    amazon-ebs:  27  corretto8                available    \
+    amazon-ebs:         [ =1.8.0_192  =1.8.0_202  =1.8.0_212  =1.8.0_222 ]
+    amazon-ebs:  28  firecracker              available    [ =0.11 ]
+    amazon-ebs:  29  golang1.11               available    [ =1.11.3  =1.11.11 ]
+    amazon-ebs:  30  squid4                   available    [ =4 ]
+    amazon-ebs:  31  php7.3                   available    \
+    amazon-ebs:         [ =7.3.2  =7.3.3  =7.3.4  =7.3.6 ]
+    amazon-ebs:  32  lustre2.10               available    [ =2.10.5 ]
+    amazon-ebs:  33  java-openjdk11           available    [ =11 ]
+    amazon-ebs:  34  lynis                    available    [ =stable ]
+    amazon-ebs:  35  kernel-ng                available    [ =stable ]
+    amazon-ebs:  36  BCC                      available    [ =0.x ]
+    amazon-ebs:  37  mono                     available    [ =5.x ]
+    amazon-ebs:
+    amazon-ebs: Now you can install:
+    amazon-ebs:  # yum clean metadata
+    amazon-ebs:  # yum install docker
+    amazon-ebs: Loaded plugins: update-motd
+    amazon-ebs: amzn2extra-docker                                        | 1.3 kB     00:00
+    amazon-ebs: Package docker-18.06.1ce-10.amzn2.x86_64 already installed and latest version
+    amazon-ebs: Nothing to do
+    amazon-ebs: --2019-08-29 05:53:21--  https://github.com/containernetworking/cni/releases/download/v0.6.0/cni-amd64-v0.6.0.tgz
+    amazon-ebs: Resolving github.com (github.com)... 192.30.255.113
+    amazon-ebs: Connecting to github.com (github.com)|192.30.255.113|:443... connected.
+    amazon-ebs: HTTP request sent, awaiting response... 302 Found
+    amazon-ebs: Location: https://github-production-release-asset-2e65be.s3.amazonaws.com/33429211/6c5dd794-837b-11e7-8165-f9d47cd5621a?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20190829%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20190829T055321Z&X-Amz-Expires=300&X-Amz-Signature=b5b74451a87a5e53ec7666d641476ffff058aee6f410d42e3ff977d74f38ffbf&X-Amz-SignedHeaders=host&actor_id=0&response-content-disposition=attachment%3B%20filename%3Dcni-amd64-v0.6.0.tgz&response-content-type=application%2Foctet-stream [following]
+    amazon-ebs: --2019-08-29 05:53:21--  https://github-production-release-asset-2e65be.s3.amazonaws.com/33429211/6c5dd794-837b-11e7-8165-f9d47cd5621a?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20190829%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20190829T055321Z&X-Amz-Expires=300&X-Amz-Signature=b5b74451a87a5e53ec7666d641476ffff058aee6f410d42e3ff977d74f38ffbf&X-Amz-SignedHeaders=host&actor_id=0&response-content-disposition=attachment%3B%20filename%3Dcni-amd64-v0.6.0.tgz&response-content-type=application%2Foctet-stream
+    amazon-ebs: Resolving github-production-release-asset-2e65be.s3.amazonaws.com (github-production-release-asset-2e65be.s3.amazonaws.com)... 52.216.145.59
+    amazon-ebs: Connecting to github-production-release-asset-2e65be.s3.amazonaws.com (github-production-release-asset-2e65be.s3.amazonaws.com)|52.216.145.59|:443... connected.
+    amazon-ebs: HTTP request sent, awaiting response... 200 OK
+    amazon-ebs: Length: 1865035 (1.8M) [application/octet-stream]
+    amazon-ebs: Saving to: ‘cni-amd64-v0.6.0.tgz’
+    amazon-ebs:
+    amazon-ebs: 100%[======================================>] 1,865,035   3.96MB/s   in 0.4s
+    amazon-ebs:
+    amazon-ebs: 2019-08-29 05:53:22 (3.96 MB/s) - ‘cni-amd64-v0.6.0.tgz’ saved [1865035/1865035]
+    amazon-ebs:
+    amazon-ebs: --2019-08-29 05:53:22--  https://github.com/containernetworking/cni/releases/download/v0.6.0/cni-amd64-v0.6.0.tgz.sha512
+    amazon-ebs: Resolving github.com (github.com)... 192.30.255.113
+    amazon-ebs: Connecting to github.com (github.com)|192.30.255.113|:443... connected.
+    amazon-ebs: HTTP request sent, awaiting response... 302 Found
+    amazon-ebs: Location: https://github-production-release-asset-2e65be.s3.amazonaws.com/33429211/6c7e0a8c-837b-11e7-87ff-18112064df32?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20190829%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20190829T055322Z&X-Amz-Expires=300&X-Amz-Signature=d8145d2236a6b388c49d0b9d706b423ec46406bd66b84a8f76a8a0ad85f89772&X-Amz-SignedHeaders=host&actor_id=0&response-content-disposition=attachment%3B%20filename%3Dcni-amd64-v0.6.0.tgz.sha512&response-content-type=application%2Foctet-stream [following]
+    amazon-ebs: --2019-08-29 05:53:22--  https://github-production-release-asset-2e65be.s3.amazonaws.com/33429211/6c7e0a8c-837b-11e7-87ff-18112064df32?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20190829%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20190829T055322Z&X-Amz-Expires=300&X-Amz-Signature=d8145d2236a6b388c49d0b9d706b423ec46406bd66b84a8f76a8a0ad85f89772&X-Amz-SignedHeaders=host&actor_id=0&response-content-disposition=attachment%3B%20filename%3Dcni-amd64-v0.6.0.tgz.sha512&response-content-type=application%2Foctet-stream
+    amazon-ebs: Resolving github-production-release-asset-2e65be.s3.amazonaws.com (github-production-release-asset-2e65be.s3.amazonaws.com)... 52.216.145.59
+    amazon-ebs: Connecting to github-production-release-asset-2e65be.s3.amazonaws.com (github-production-release-asset-2e65be.s3.amazonaws.com)|52.216.145.59|:443... connected.
+    amazon-ebs: HTTP request sent, awaiting response... 200 OK
+    amazon-ebs: Length: 151 [application/octet-stream]
+    amazon-ebs: Saving to: ‘cni-amd64-v0.6.0.tgz.sha512’
+    amazon-ebs:
+    amazon-ebs: 100%[======================================>] 151         --.-K/s   in 0s
+    amazon-ebs:
+    amazon-ebs: 2019-08-29 05:53:23 (4.97 MB/s) - ‘cni-amd64-v0.6.0.tgz.sha512’ saved [151/151]
+    amazon-ebs:
+    amazon-ebs: cni-amd64-v0.6.0.tgz: OK
+    amazon-ebs: ./
+    amazon-ebs: ./noop
+    amazon-ebs: ./cnitool
+    amazon-ebs: --2019-08-29 05:53:23--  https://github.com/containernetworking/plugins/releases/download/v0.7.5/cni-plugins-amd64-v0.7.5.tgz
+    amazon-ebs: Resolving github.com (github.com)... 192.30.255.113
+    amazon-ebs: Connecting to github.com (github.com)|192.30.255.113|:443... connected.
+    amazon-ebs: HTTP request sent, awaiting response... 302 Found
+    amazon-ebs: Location: https://github-production-release-asset-2e65be.s3.amazonaws.com/84575398/131b7380-4751-11e9-8db3-7b96b6a634f3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20190829%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20190829T055323Z&X-Amz-Expires=300&X-Amz-Signature=5535a840ac1cab5d5e043f141ed2d3a39eadfcd744f78084274aa4376ec4eaba&X-Amz-SignedHeaders=host&actor_id=0&response-content-disposition=attachment%3B%20filename%3Dcni-plugins-amd64-v0.7.5.tgz&response-content-type=application%2Foctet-stream [following]
+    amazon-ebs: --2019-08-29 05:53:23--  https://github-production-release-asset-2e65be.s3.amazonaws.com/84575398/131b7380-4751-11e9-8db3-7b96b6a634f3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20190829%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20190829T055323Z&X-Amz-Expires=300&X-Amz-Signature=5535a840ac1cab5d5e043f141ed2d3a39eadfcd744f78084274aa4376ec4eaba&X-Amz-SignedHeaders=host&actor_id=0&response-content-disposition=attachment%3B%20filename%3Dcni-plugins-amd64-v0.7.5.tgz&response-content-type=application%2Foctet-stream
+    amazon-ebs: Resolving github-production-release-asset-2e65be.s3.amazonaws.com (github-production-release-asset-2e65be.s3.amazonaws.com)... 52.216.145.59
+    amazon-ebs: Connecting to github-production-release-asset-2e65be.s3.amazonaws.com (github-production-release-asset-2e65be.s3.amazonaws.com)|52.216.145.59|:443... connected.
+    amazon-ebs: HTTP request sent, awaiting response... 200 OK
+    amazon-ebs: Length: 17109361 (16M) [application/octet-stream]
+    amazon-ebs: Saving to: ‘cni-plugins-amd64-v0.7.5.tgz’
+    amazon-ebs:
+    amazon-ebs: 100%[======================================>] 17,109,361  12.7MB/s   in 1.3s
+    amazon-ebs:
+    amazon-ebs: 2019-08-29 05:53:25 (12.7 MB/s) - ‘cni-plugins-amd64-v0.7.5.tgz’ saved [17109361/17109361]
+    amazon-ebs:
+    amazon-ebs: --2019-08-29 05:53:25--  https://github.com/containernetworking/plugins/releases/download/v0.7.5/cni-plugins-amd64-v0.7.5.tgz.sha512
+    amazon-ebs: Resolving github.com (github.com)... 192.30.255.113
+    amazon-ebs: Connecting to github.com (github.com)|192.30.255.113|:443... connected.
+    amazon-ebs: HTTP request sent, awaiting response... 302 Found
+    amazon-ebs: Location: https://github-production-release-asset-2e65be.s3.amazonaws.com/84575398/144ca080-4751-11e9-91ad-61a6795ce6a1?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20190829%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20190829T055325Z&X-Amz-Expires=300&X-Amz-Signature=6bb873d396c79f2310d1a18c90763c128d7b97ed3618a8bd5b099f86c76fd757&X-Amz-SignedHeaders=host&actor_id=0&response-content-disposition=attachment%3B%20filename%3Dcni-plugins-amd64-v0.7.5.tgz.sha512&response-content-type=application%2Foctet-stream [following]
+    amazon-ebs: --2019-08-29 05:53:25--  https://github-production-release-asset-2e65be.s3.amazonaws.com/84575398/144ca080-4751-11e9-91ad-61a6795ce6a1?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20190829%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20190829T055325Z&X-Amz-Expires=300&X-Amz-Signature=6bb873d396c79f2310d1a18c90763c128d7b97ed3618a8bd5b099f86c76fd757&X-Amz-SignedHeaders=host&actor_id=0&response-content-disposition=attachment%3B%20filename%3Dcni-plugins-amd64-v0.7.5.tgz.sha512&response-content-type=application%2Foctet-stream
+    amazon-ebs: Resolving github-production-release-asset-2e65be.s3.amazonaws.com (github-production-release-asset-2e65be.s3.amazonaws.com)... 52.217.1.220
+    amazon-ebs: Connecting to github-production-release-asset-2e65be.s3.amazonaws.com (github-production-release-asset-2e65be.s3.amazonaws.com)|52.217.1.220|:443... connected.
+    amazon-ebs: HTTP request sent, awaiting response... 200 OK
+    amazon-ebs: Length: 159 [application/octet-stream]
+    amazon-ebs: Saving to: ‘cni-plugins-amd64-v0.7.5.tgz.sha512’
+    amazon-ebs:
+    amazon-ebs: 100%[======================================>] 159         --.-K/s   in 0s
+    amazon-ebs:
+    amazon-ebs: 2019-08-29 05:53:25 (5.40 MB/s) - ‘cni-plugins-amd64-v0.7.5.tgz.sha512’ saved [159/159]
+    amazon-ebs:
+    amazon-ebs: cni-plugins-amd64-v0.7.5.tgz: OK
+    amazon-ebs: ./
+    amazon-ebs: ./flannel
+    amazon-ebs: ./ptp
+    amazon-ebs: ./host-local
+    amazon-ebs: ./portmap
+    amazon-ebs: ./tuning
+    amazon-ebs: ./vlan
+    amazon-ebs: ./host-device
+    amazon-ebs: ./sample
+    amazon-ebs: ./dhcp
+    amazon-ebs: ./ipvlan
+    amazon-ebs: ./macvlan
+    amazon-ebs: ./loopback
+    amazon-ebs: ./bridge
+    amazon-ebs: Downloading binaries from: s3://amazon-eks
+    amazon-ebs: AWS cli missing - using wget to fetch binaries from s3. Note: This won't work for private bucket.
+    amazon-ebs: --2019-08-29 05:53:26--  https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/kubelet
+    amazon-ebs: Resolving amazon-eks.s3-us-west-2.amazonaws.com (amazon-eks.s3-us-west-2.amazonaws.com)... 52.218.237.241
+    amazon-ebs: Connecting to amazon-eks.s3-us-west-2.amazonaws.com (amazon-eks.s3-us-west-2.amazonaws.com)|52.218.237.241|:443... connected.
+    amazon-ebs: HTTP request sent, awaiting response... 200 OK
+    amazon-ebs: Length: 114403704 (109M) [binary/octet-stream]
+    amazon-ebs: Saving to: ‘kubelet’
+    amazon-ebs:
+    amazon-ebs: 100%[======================================>] 114,403,704 58.7MB/s   in 1.9s
+    amazon-ebs:
+    amazon-ebs: 2019-08-29 05:53:28 (58.7 MB/s) - ‘kubelet’ saved [114403704/114403704]
+    amazon-ebs:
+    amazon-ebs: --2019-08-29 05:53:28--  https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/kubelet.sha256
+    amazon-ebs: Resolving amazon-eks.s3-us-west-2.amazonaws.com (amazon-eks.s3-us-west-2.amazonaws.com)... 52.218.237.241
+    amazon-ebs: Connecting to amazon-eks.s3-us-west-2.amazonaws.com (amazon-eks.s3-us-west-2.amazonaws.com)|52.218.237.241|:443... connected.
+    amazon-ebs: HTTP request sent, awaiting response... 200 OK
+    amazon-ebs: Length: 73 [binary/octet-stream]
+    amazon-ebs: Saving to: ‘kubelet.sha256’
+    amazon-ebs:
+    amazon-ebs: 100%[======================================>] 73          --.-K/s   in 0s
+    amazon-ebs:
+    amazon-ebs: 2019-08-29 05:53:28 (1.51 MB/s) - ‘kubelet.sha256’ saved [73/73]
+    amazon-ebs:
+    amazon-ebs: kubelet: OK
+    amazon-ebs: AWS cli missing - using wget to fetch binaries from s3. Note: This won't work for private bucket.
+    amazon-ebs: --2019-08-29 05:53:28--  https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator
+    amazon-ebs: Resolving amazon-eks.s3-us-west-2.amazonaws.com (amazon-eks.s3-us-west-2.amazonaws.com)... 52.218.237.241
+    amazon-ebs: Connecting to amazon-eks.s3-us-west-2.amazonaws.com (amazon-eks.s3-us-west-2.amazonaws.com)|52.218.237.241|:443... connected.
+    amazon-ebs: HTTP request sent, awaiting response... 200 OK
+    amazon-ebs: Length: 18650400 (18M) [binary/octet-stream]
+    amazon-ebs: Saving to: ‘aws-iam-authenticator’
+    amazon-ebs:
+    amazon-ebs: 100%[======================================>] 18,650,400  70.3MB/s   in 0.3s
+    amazon-ebs:
+    amazon-ebs: 2019-08-29 05:53:29 (70.3 MB/s) - ‘aws-iam-authenticator’ saved [18650400/18650400]
+    amazon-ebs:
+    amazon-ebs: --2019-08-29 05:53:29--  https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator.sha256
+    amazon-ebs: Resolving amazon-eks.s3-us-west-2.amazonaws.com (amazon-eks.s3-us-west-2.amazonaws.com)... 52.218.237.241
+    amazon-ebs: Connecting to amazon-eks.s3-us-west-2.amazonaws.com (amazon-eks.s3-us-west-2.amazonaws.com)|52.218.237.241|:443... connected.
+    amazon-ebs: HTTP request sent, awaiting response... 200 OK
+    amazon-ebs: Length: 87 [binary/octet-stream]
+    amazon-ebs: Saving to: ‘aws-iam-authenticator.sha256’
+    amazon-ebs:
+    amazon-ebs: 100%[======================================>] 87          --.-K/s   in 0s
+    amazon-ebs:
+    amazon-ebs: 2019-08-29 05:53:29 (1.54 MB/s) - ‘aws-iam-authenticator.sha256’ saved [87/87]
+    amazon-ebs:
+    amazon-ebs: aws-iam-authenticator: OK
+    amazon-ebs: Loaded plugins: update-motd
+    amazon-ebs: Cleaning repos: amzn2-core amzn2extra-docker scaleft
+    amazon-ebs: Cleaning up everything
+    amazon-ebs: Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
+==> amazon-ebs: Stopping the source instance...
+    amazon-ebs: Stopping instance
+==> amazon-ebs: Waiting for the instance to stop...
+==> amazon-ebs: Creating AMI amazon-eks-node-1.13-v20190829 from instance i-04f2b0d5ca8c3a149
+    amazon-ebs: AMI: ami-09a12fc6e3e545194
+==> amazon-ebs: Waiting for AMI to become ready...
+==> amazon-ebs: Modifying attributes on AMI (ami-09a12fc6e3e545194)...
+    amazon-ebs: Modifying: description
+==> amazon-ebs: Modifying attributes on snapshot (snap-08d567034f862ccc1)...
+==> amazon-ebs: Modifying attributes on snapshot (snap-094aee90234bb7bc5)...
+==> amazon-ebs: Adding tags to AMI (ami-09a12fc6e3e545194)...
+==> amazon-ebs: Tagging snapshot: snap-08d567034f862ccc1
+==> amazon-ebs: Tagging snapshot: snap-094aee90234bb7bc5
+==> amazon-ebs: Creating AMI tags
+    amazon-ebs: Adding tag: "cni_plugin_version": "v0.7.5"
+    amazon-ebs: Adding tag: "Name": "amazon-eks-node-1.13-v20190829"
+    amazon-ebs: Adding tag: "created": "1567057882"
+    amazon-ebs: Adding tag: "docker_version": "18.06"
+    amazon-ebs: Adding tag: "source_ami_id": "ami-08f45bf9d58686a06"
+    amazon-ebs: Adding tag: "kubernetes": "1.13.7/2019-06-11/bin/linux/x86_64"
+    amazon-ebs: Adding tag: "cni_version": "v0.6.0"
+==> amazon-ebs: Creating snapshot tags
+==> amazon-ebs: Terminating the source AWS instance...
+==> amazon-ebs: Cleaning up any extra volumes...
+==> amazon-ebs: No volumes to clean up, skipping
+==> amazon-ebs: Deleting temporary security group...
+==> amazon-ebs: Deleting temporary keypair...
+==> amazon-ebs: Running post-processor: manifest
+Build 'amazon-ebs' finished.
+
+==> Builds finished. The artifacts of successful builds are:
+--> amazon-ebs: AMIs were created:
+us-west-2: ami-09a12fc6e3e545194
+
+--> amazon-ebs:
+make[1]: Leaving directory `/root/ami/amazon-eks-ami'
+[root@ip-10-177-112-28 amazon-eks-ami]# timed out waiting for input: auto-logout
+[naveenk1@ip-10-177-112-28 ~]$

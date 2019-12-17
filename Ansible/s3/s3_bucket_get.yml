@@ -1,0 +1,14 @@
+- name: get file from s3 bucket
+  hosts: all
+  strategy: free
+  gather_facts: False
+  become: true
+  become_user: root
+
+  tasks:
+     - name: Simple PUT operation
+       s3:
+         bucket: nknk
+         object: test.txt
+         dest: /etc/ansible/playbooks/sample.txt
+         mode: get

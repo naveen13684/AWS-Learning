@@ -1,0 +1,12 @@
+- name: delete s3 bucket
+  hosts: all
+  strategy: free
+  gather_facts: False
+  become: true
+  become_user: root
+
+  tasks:
+       - name: Delete a bucket and all contents
+         s3:
+           bucket: nknk
+           mode: delete

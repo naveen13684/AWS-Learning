@@ -1,0 +1,373 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "CloudWatch Alarms",
+    "Parameters": {
+        "instanceid": {
+            "Description": "Choose an instance id",
+            "Type": "AWS::EC2::Instance::Id"
+        },
+        "instancename": {
+            "Description": "Please provide EC2 instance name",
+            "Type": "String",
+            "MinLength": "1",
+            "MaxLength": "50"
+        },
+        "criticalsnsarn": {
+            "Description": "Please provide an ARN of SNS topic - CRITICAL Type",
+            "Type": "String"
+        },
+        "warningsnsarn": {
+            "Description": "Please provide an ARN of SNS topic - WARNING Type",
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "CPUAlarmWARNING": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "${instancename} - ${instanceid} - High CPU Usage 90%"
+                },
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "MetricName": "CPUUtilization",
+                "Namespace": "AWS/EC2",
+                "Statistic": "Average",
+                "Period": "900",
+                "EvaluationPeriods": "3",
+                "Threshold": "90",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "instanceid"
+                        }
+                    }
+                ]
+            }
+        },
+        "CPUAlarmCRITICAL": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "${instancename} - ${instanceid} - High CPU Usage 95%"
+                },
+                "AlarmActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "MetricName": "CPUUtilization",
+                "Namespace": "AWS/EC2",
+                "Statistic": "Average",
+                "Period": "900",
+                "EvaluationPeriods": "2",
+                "Threshold": "95",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "instanceid"
+                        }
+                    }
+                ]
+            }
+        },
+        "SystemStatusAlarmWARNING": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "${instancename} - ${instanceid} - instance recovery process has been triggered because of failed System Status Check"
+                },
+                "Namespace": "AWS/EC2",
+                "MetricName": "StatusCheckFailed_System",
+                "Statistic": "Minimum",
+                "Period": "60",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "0",
+                "AlarmActions": [
+                    {
+                        "Fn::Sub": "arn:aws:automate:${AWS::Region}:ec2:recover"
+                    },
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "instanceid"
+                        }
+                    }
+                ]
+            }
+        },
+        "InstanceStatusAlarmCRITICAL": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "${instancename} - ${instanceid} - Instance Status Check Failed - please investigate."
+                },
+                "Namespace": "AWS/EC2",
+                "MetricName": "StatusCheckFailed_Instance",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "5",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "0",
+                "AlarmActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "instanceid"
+                        }
+                    }
+                ]
+            }
+        },
+ 	"NetworkInWARNING": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "${instancename} - ${instanceid} - the volume of incoming network traffic to a single instance"
+                },
+                "Namespace": "AWS/EC2",
+                "MetricName": "NetworkIn",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "3",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "1000000",
+		"Unit": "Bytes",
+		"AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "instanceid"
+                        }
+                    }
+                ]
+            }
+        },
+ 	"NetworkInCRITICAL": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "${instancename} - ${instanceid} - the volume of incoming network traffic to a single instance"
+                },
+                "Namespace": "AWS/EC2",
+                "MetricName": "NetworkIn",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "3",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "1500000",
+		"Unit": "Bytes",
+		"AlarmActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "instanceid"
+                        }
+                    }
+                ]
+            }
+        },
+	"NetworkOutWARNING": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "${instancename} - ${instanceid} - the volume of outgoing network traffic from a single instance"
+                },
+                "Namespace": "AWS/EC2",
+                "MetricName": "NetworkOut",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "3",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "1000000",
+		"Unit": "Bytes",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "instanceid"
+                        }
+                    }
+                ]
+            }
+        },
+	"NetworkOutCRITICAL": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "${instancename} - ${instanceid} - the volume of outgoing network traffic from a single instance"
+                },
+                "Namespace": "AWS/EC2",
+                "MetricName": "NetworkOut",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "3",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "1500000",
+		"Unit": "Bytes",
+                "AlarmActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "instanceid"
+                        }
+                    }
+                ]
+            }
+        },
+	"DiskReadOps": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "${instancename} - ${instanceid} - average I/O operations per second (IOPS) for the period"
+                },
+                "Namespace": "AWS/EC2",
+                "MetricName": "DiskReadOps",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "3",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "0",
+                "AlarmActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "instanceid"
+                        }
+                    }
+                ]
+            }
+        },
+	"DiskWriteOps": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "${instancename} - ${instanceid} - average I/O operations per second (IOPS) for the period"
+                },
+                "Namespace": "AWS/EC2",
+                "MetricName": "DiskWriteOps",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "3",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "0",
+                "AlarmActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "instanceid"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

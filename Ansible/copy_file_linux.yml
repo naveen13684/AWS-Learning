@@ -1,0 +1,6 @@
+---
+- hosts: all
+
+  tasks:
+  - name: copy file
+    local_action: copy src=/etc/ansible/s1/f1 dest=/etc/ansible/s2

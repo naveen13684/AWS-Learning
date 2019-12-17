@@ -1,0 +1,377 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "CloudTrail trail-log Setup",
+    "Metadata": {
+        "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+                    "Label": {
+                        "default": "CloudTrail Parameters"
+                    },
+                    "Parameters": [
+                        "CloudWatchLogsRetentionInDays",
+                        "ExternalTrailBucket",
+                        "LogFilePrefix"
+                    ]
+                }
+            ]
+        }
+    },
+    "Parameters": {
+        "CloudWatchLogsRetentionInDays": {
+            "Description": "The number of days log events are kept in CloudWatch Logs",
+            "Type": "Number",
+            "Default": 30,
+            "AllowedValues": [
+                1,
+                3,
+                5,
+                7,
+                14,
+                30,
+                60,
+                90,
+                120,
+                150,
+                180,
+                365,
+                400,
+                545,
+                731,
+                1827,
+                3653
+            ]
+        },
+        "ExternalTrailBucket": {
+            "Description": "(Optional) S3 Bucket name where CloudTrail publishes log files. If you leave this empty, a new bucket is created",
+            "Type": "String",
+            "Default": ""
+        },
+        "LogFilePrefix": {
+            "Description": "(Optional) The log file prefix.",
+            "Type": "String",
+            "Default": ""
+        },
+        "S3DataEvents": {
+            "Description": "Record data events of all S3 buckets? (Warning: additional charges apply.)",
+            "Type": "String",
+            "Default": "false",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        }
+    },
+    "Conditions": {
+        "InternalBucket": {
+            "Fn::Equals": [
+                {
+                    "Ref": "ExternalTrailBucket"
+                },
+                ""
+            ]
+        },
+        "ExternalBucket": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "ExternalTrailBucket"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "HasLogFilePrefix": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "LogFilePrefix"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "IsS3DataEvents": {
+            "Fn::Equals": [
+                {
+                    "Ref": "S3DataEvents"
+                },
+                "true"
+            ]
+        }
+    },
+    "Resources": {
+        "TrailBucket": {
+            "Condition": "InternalBucket",
+            "Type": "AWS::S3::Bucket",
+            "Properties": {}
+        },
+        "TrailBucketPolicy": {
+            "Condition": "InternalBucket",
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+                "Bucket": {
+                    "Ref": "TrailBucket"
+                },
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "AWSCloudTrailAclCheck",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "cloudtrail.amazonaws.com"
+                            },
+                            "Action": "s3:GetBucketAcl",
+                            "Resource": {
+                                "Fn::Sub": "arn:aws:s3:::${TrailBucket}"
+                            }
+                        },
+                        {
+                            "Sid": "AWSCloudTrailWrite",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "cloudtrail.amazonaws.com"
+                            },
+                            "Action": "s3:PutObject",
+                            "Resource": {
+                                "Fn::If": [
+                                    "HasLogFilePrefix",
+                                    {
+                                        "Fn::Sub": "arn:aws:s3:::${TrailBucket}/${LogFilePrefix}/AWSLogs/${AWS::AccountId}/*"
+                                    },
+                                    {
+                                        "Fn::Sub": "arn:aws:s3:::${TrailBucket}/AWSLogs/${AWS::AccountId}/*"
+                                    }
+                                ]
+                            },
+                            "Condition": {
+                                "StringEquals": {
+                                    "s3:x-amz-acl": "bucket-owner-full-control"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "TrailLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "RetentionInDays": {
+                    "Ref": "CloudWatchLogsRetentionInDays"
+                }
+            }
+        },
+        "TrailLogGroupRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "AssumeRole1",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "cloudtrail.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "cloudtrail-policy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:CreateLogStream",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": {
+                                        "Fn::GetAtt": [
+                                            "TrailLogGroup",
+                                            "Arn"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "TrailTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {}
+        },
+        "TrailTopicPolicy": {
+            "Type": "AWS::SNS::TopicPolicy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "AWSCloudTrailSNSPolicy",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "cloudtrail.amazonaws.com"
+                            },
+                            "Resource": {
+                                "Ref": "TrailTopic"
+                            },
+                            "Action": "sns:Publish"
+                        }
+                    ]
+                },
+                "Topics": [
+                    {
+                        "Ref": "TrailTopic"
+                    }
+                ]
+            }
+        },
+        "Trail": {
+            "Condition": "InternalBucket",
+            "DependsOn": [
+                "TrailBucketPolicy",
+                "TrailTopicPolicy"
+            ],
+            "Type": "AWS::CloudTrail::Trail",
+            "Properties": {
+                "IncludeGlobalServiceEvents": true,
+                "IsLogging": true,
+                "IsMultiRegionTrail": true,
+                "EventSelectors": {
+                    "Fn::If": [
+                        "IsS3DataEvents",
+                        [
+                            {
+                                "DataResources": [
+                                    {
+                                        "Type": "AWS::S3::Object",
+                                        "Values": [
+                                            "arn:aws:s3:::"
+                                        ]
+                                    }
+                                ],
+                                "IncludeManagementEvents": true,
+                                "ReadWriteType": "All"
+                            }
+                        ],
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                },
+                "S3BucketName": {
+                    "Ref": "TrailBucket"
+                },
+                "S3KeyPrefix": {
+                    "Ref": "LogFilePrefix"
+                },
+                "EnableLogFileValidation": true,
+                "CloudWatchLogsLogGroupArn": {
+                    "Fn::GetAtt": [
+                        "TrailLogGroup",
+                        "Arn"
+                    ]
+                },
+                "CloudWatchLogsRoleArn": {
+                    "Fn::GetAtt": [
+                        "TrailLogGroupRole",
+                        "Arn"
+                    ]
+                },
+                "SnsTopicName": {
+                    "Fn::GetAtt": [
+                        "TrailTopic",
+                        "TopicName"
+                    ]
+                }
+            }
+        },
+        "ExternalTrail": {
+            "Condition": "ExternalBucket",
+            "DependsOn": [
+                "TrailTopicPolicy"
+            ],
+            "Type": "AWS::CloudTrail::Trail",
+            "Properties": {
+                "IncludeGlobalServiceEvents": true,
+                "IsLogging": true,
+                "IsMultiRegionTrail": true,
+                "EventSelectors": {
+                    "Fn::If": [
+                        "IsS3DataEvents",
+                        [
+                            {
+                                "DataResources": [
+                                    {
+                                        "Type": "AWS::S3::Object",
+                                        "Values": [
+                                            "arn:aws:s3:::"
+                                        ]
+                                    }
+                                ],
+                                "IncludeManagementEvents": true,
+                                "ReadWriteType": "All"
+                            }
+                        ],
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                },
+                "S3BucketName": {
+                    "Ref": "ExternalTrailBucket"
+                },
+                "S3KeyPrefix": {
+                    "Ref": "LogFilePrefix"
+                },
+                "EnableLogFileValidation": true,
+                "CloudWatchLogsLogGroupArn": {
+                    "Fn::GetAtt": [
+                        "TrailLogGroup",
+                        "Arn"
+                    ]
+                },
+                "CloudWatchLogsRoleArn": {
+                    "Fn::GetAtt": [
+                        "TrailLogGroupRole",
+                        "Arn"
+                    ]
+                },
+                "SnsTopicName": {
+                    "Fn::GetAtt": [
+                        "TrailTopic",
+                        "TopicName"
+                    ]
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "TemplateID": {
+            "Description": "TemplateID",
+            "Value": "security/cloudtrail"
+        },
+        "TemplateVersion": {
+            "Description": "TemplateVersion",
+            "Value": "__VERSION__"
+        },
+        "StackName": {
+            "Description": "Stack name.",
+            "Value": {
+                "Fn::Sub": "${AWS::StackName}"
+            }
+        }
+    }
+}

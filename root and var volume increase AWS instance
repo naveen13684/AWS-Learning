@@ -1,0 +1,168 @@
+/dev/xvda1
+
+growpart /dev/xvda 1
+
+
+[root@ip-10-177-114-183 ~]# lsblk
+NAME           MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+xvda           202:0    0  20G  0 disk
+└─xvda1        202:1    0  20G  0 part /
+xvdf           202:80   0  50G  0 disk
+├─vg00-tmp     253:0    0  25G  0 lvm  /tmp
+├─vg00-var     253:1    0  10G  0 lvm  /var
+├─vg00-home    253:2    0   8G  0 lvm  /home
+└─vg00-var_tmp 253:3    0   5G  0 lvm  /var/tmp
+[root@ip-10-177-114-183 ~]#
+
+[root@ip-10-177-114-183 ~]# vgs
+  VG   #PV #LV #SN Attr   VSize   VFree
+  vg00   1   4   0 wz--n- <50.00g <2.00g
+[root@ip-10-177-114-183 ~]#
+
+[root@ip-10-177-114-183 ~]# lvs
+  LV      VG   Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  home    vg00 -wi-ao----  8.00g
+  tmp     vg00 -wi-ao---- 25.00g
+  var     vg00 -wi-ao---- 10.00g
+  var_tmp vg00 -wi-ao----  5.00g
+[root@ip-10-177-114-183 ~]# 
+
+[root@ip-10-177-114-183 ~]# blkid
+/dev/xvda1: LABEL="/" UUID="0dc5ba8a-7484-4af4-aaff-9a17674ef14f" TYPE="xfs" PARTLABEL="Linux" PARTUUID="6f8643c5-8a83-4b6e-aaa1-8ab99c1023e3"
+/dev/mapper/vg00-tmp: UUID="1a21ed9b-5853-43b8-ac80-09aa0b4424bb" TYPE="ext4"
+/dev/xvdf: UUID="xqJC8F-4Kfn-pM1F-shbS-lxJU-uwcS-NPS2v1" TYPE="LVM2_member"
+/dev/mapper/vg00-var: UUID="af253463-f937-4252-857d-4c40a4c4c25f" TYPE="ext4"
+/dev/mapper/vg00-home: UUID="d4baa54f-0698-4641-b495-285bcf0995e8" TYPE="ext4"
+/dev/mapper/vg00-var_tmp: UUID="d666f5a4-6088-48da-9fa1-7bcb0ce96f46" TYPE="ext4"
+[root@ip-10-177-114-183 ~]#
+
+
+[root@ip-10-177-114-183 ~]# growpart /dev/xvda 1
+CHANGED: partition=1 start=4096 old: size=41938911 end=41943007 new: size=209711071,end=209715167
+[root@ip-10-177-114-183 ~]# 
+
+
+
+[root@ip-10-177-114-183 ~]# lsblk
+NAME           MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+xvda           202:0    0  100G  0 disk
+└─xvda1        202:1    0  100G  0 part /
+xvdf           202:80   0   50G  0 disk
+├─vg00-tmp     253:0    0   25G  0 lvm  /tmp
+├─vg00-var     253:1    0   10G  0 lvm  /var
+├─vg00-home    253:2    0    8G  0 lvm  /home
+└─vg00-var_tmp 253:3    0    5G  0 lvm  /var/tmp
+[root@ip-10-177-114-183 ~]# 
+
+[root@ip-10-177-114-183 ~]# df -h
+Filesystem                Size  Used Avail Use% Mounted on
+devtmpfs                   16G     0   16G   0% /dev
+tmpfs                      16G     0   16G   0% /dev/shm
+tmpfs                      16G  380K   16G   1% /run
+tmpfs                      16G     0   16G   0% /sys/fs/cgroup
+/dev/xvda1                 20G  2.6G   18G  13% /
+/dev/mapper/vg00-var      9.8G  1.8G  7.5G  19% /var
+/dev/mapper/vg00-tmp       25G   45M   24G   1% /tmp
+/dev/mapper/vg00-home     7.8G   37M  7.3G   1% /home
+/dev/mapper/vg00-var_tmp  4.8G   20M  4.6G   1% /var/tmp
+tmpfs                     3.2G     0  3.2G   0% /run/user/1000
+[root@ip-10-177-114-183 ~]# 
+
+
+[root@ip-10-177-114-183 ~]# xfs_growfs /dev/xvda1
+meta-data=/dev/xvda1             isize=512    agcount=41, agsize=130943 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=0 spinodes=0
+data     =                       bsize=4096   blocks=5242363, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+data blocks changed from 5242363 to 26213883
+[root@ip-10-177-114-183 ~]#
+
+[root@ip-10-177-114-183 ~]# df -h
+Filesystem                Size  Used Avail Use% Mounted on
+devtmpfs                   16G     0   16G   0% /dev
+tmpfs                      16G     0   16G   0% /dev/shm
+tmpfs                      16G  380K   16G   1% /run
+tmpfs                      16G     0   16G   0% /sys/fs/cgroup
+/dev/xvda1                100G  2.6G   98G   3% /
+/dev/mapper/vg00-var      9.8G  1.8G  7.5G  19% /var
+/dev/mapper/vg00-tmp       25G   45M   24G   1% /tmp
+/dev/mapper/vg00-home     7.8G   37M  7.3G   1% /home
+/dev/mapper/vg00-var_tmp  4.8G   20M  4.6G   1% /var/tmp
+tmpfs                     3.2G     0  3.2G   0% /run/user/1000
+[root@ip-10-177-114-183 ~]#
+
+[root@ip-10-177-114-183 ~]# lsblk
+NAME           MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+xvda           202:0    0  100G  0 disk
+└─xvda1        202:1    0  100G  0 part /
+xvdf           202:80   0  100G  0 disk
+├─vg00-tmp     253:0    0   25G  0 lvm  /tmp
+├─vg00-var     253:1    0   10G  0 lvm  /var
+├─vg00-home    253:2    0    8G  0 lvm  /home
+└─vg00-var_tmp 253:3    0    5G  0 lvm  /var/tmp
+[root@ip-10-177-114-183 ~]#
+
+
+[root@ip-10-177-114-183 ~]# pvresize /dev/xvdf
+  Physical volume "/dev/sdf" changed
+  1 physical volume(s) resized / 0 physical volume(s) not resized
+  
+  
+[root@ip-10-177-114-183 ~]# lsblk
+NAME           MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+xvda           202:0    0  100G  0 disk
+└─xvda1        202:1    0  100G  0 part /
+xvdf           202:80   0  100G  0 disk
+├─vg00-tmp     253:0    0   25G  0 lvm  /tmp
+├─vg00-var     253:1    0   10G  0 lvm  /var
+├─vg00-home    253:2    0    8G  0 lvm  /home
+└─vg00-var_tmp 253:3    0    5G  0 lvm  /var/tmp
+[root@ip-10-177-114-183 ~]# vgs
+  VG   #PV #LV #SN Attr   VSize    VFree
+  vg00   1   4   0 wz--n- <100.00g <52.00g
+[root@ip-10-177-114-183 ~]# 
+
+
+[root@ip-10-177-114-183 ~]# lvextend -L 50G /dev/vg00/var
+  Size of logical volume vg00/var changed from 10.00 GiB (2560 extents) to 50.00 GiB (12800 extents).
+  Logical volume vg00/var successfully resized.
+  
+  
+[root@ip-10-177-114-183 ~]# df -h
+Filesystem                Size  Used Avail Use% Mounted on
+devtmpfs                   16G     0   16G   0% /dev
+tmpfs                      16G     0   16G   0% /dev/shm
+tmpfs                      16G  344K   16G   1% /run
+tmpfs                      16G     0   16G   0% /sys/fs/cgroup
+/dev/xvda1                100G  2.6G   98G   3% /
+/dev/mapper/vg00-tmp       25G   45M   24G   1% /tmp
+/dev/mapper/vg00-var      9.8G  1.8G  7.5G  19% /var
+/dev/mapper/vg00-home     7.8G   37M  7.3G   1% /home
+/dev/mapper/vg00-var_tmp  4.8G   20M  4.6G   1% /var/tmp
+tmpfs                     3.2G     0  3.2G   0% /run/user/1000
+[root@ip-10-177-114-183 ~]# resize2fs /dev/vg00/var
+resize2fs 1.42.9 (28-Dec-2013)
+Filesystem at /dev/vg00/var is mounted on /var; on-line resizing required
+old_desc_blocks = 2, new_desc_blocks = 7
+The filesystem on /dev/vg00/var is now 13107200 blocks long.
+
+
+[root@ip-10-177-114-183 ~]# df -h
+Filesystem                Size  Used Avail Use% Mounted on
+devtmpfs                   16G     0   16G   0% /dev
+tmpfs                      16G     0   16G   0% /dev/shm
+tmpfs                      16G  344K   16G   1% /run
+tmpfs                      16G     0   16G   0% /sys/fs/cgroup
+/dev/xvda1                100G  2.6G   98G   3% /
+/dev/mapper/vg00-tmp       25G   45M   24G   1% /tmp
+/dev/mapper/vg00-var       50G  1.8G   46G   4% /var
+/dev/mapper/vg00-home     7.8G   37M  7.3G   1% /home
+/dev/mapper/vg00-var_tmp  4.8G   20M  4.6G   1% /var/tmp
+tmpfs                     3.2G     0  3.2G   0% /run/user/1000
+[root@ip-10-177-114-183 ~]#
+

@@ -1,0 +1,170 @@
+ECR level permission and add below policy : Include Users "arn" of user in the policy
+====================================
+
+
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "POC_ECR_ACCESS",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "arn:aws:iam::856279758674:root",
+          "arn:aws:iam::549615285520:role/ECR_Access_DevCP"
+        ]
+      },
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchDeleteImage",
+        "ecr:BatchGetImage",
+        "ecr:CompleteLayerUpload",
+        "ecr:DeleteLifecyclePolicy",
+        "ecr:DeleteRepository",
+        "ecr:DeleteRepositoryPolicy",
+        "ecr:DescribeImages",
+        "ecr:DescribeRepositories",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:GetLifecyclePolicy",
+        "ecr:GetLifecyclePolicyPreview",
+        "ecr:GetRepositoryPolicy",
+        "ecr:InitiateLayerUpload",
+        "ecr:ListImages",
+        "ecr:PutImage",
+        "ecr:PutLifecyclePolicy",
+        "ecr:SetRepositoryPolicy",
+        "ecr:StartLifecyclePolicyPreview",
+        "ecr:UploadLayerPart"
+      ]
+    }
+  ]
+}
+
+
+Commands:
+=========
+[root@ip-10-178-162-70 ~]# aws ecr get-login --registry-ids 549615285520 --region eu-central-1
+docker login -u AWS -p #########################  https://549615285520.dkr.ecr.eu-central-1.amazonaws.com
+
+
+[root@ip-10-178-162-70 ~]# docker login -u AWS -p ##########################
+WARNING! Using --password via the CLI is insecure. Use --password-stdin.
+WARNING! Your password will be stored unencrypted in /root/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+
+Login Succeeded
+[root@ip-10-178-162-70 ~]#
+
+[root@ip-10-178-162-70 .aws]# docker images
+REPOSITORY                                                                   TAG                 IMAGE ID            CREATED             SIZE
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devcore                      1.1.452             36ce436421eb        3 weeks ago         1.42GB
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxcore                 devcore-nginx       c7cac6adc6a6        3 weeks ago         773MB
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb                  wso2ei.11.0         c5e1c2d23600        2 months ago        862MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/amazon-k8s-cni               v1.3.2              b97742ccfd0c        4 months ago        367MB
+k8s.gcr.io/cluster-autoscaler                                                v1.13.1             39c073d73c1e        6 months ago        137MB
+gcr.io/kubernetes-helm/tiller                                                v2.12.0-rc.1        83a87b7c9ddc        6 months ago        81.3MB
+gcr.io/google_containers/metrics-server-amd64                                v0.3.1              61a0c90da56e        9 months ago        40.8MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/pause-amd64              3.1                 9e462c010bf3        12 months ago       742kB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/kube-dns/sidecar         1.14.10             6d73a937004e        12 months ago       41.6MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/kube-dns/kube-dns        1.14.10             4d1881f0ea47        12 months ago       49.5MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/kube-dns/dnsmasq-nanny   1.14.10             396d4823052d        12 months ago       40.4MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/kube-proxy               v1.10.3             c6fc6eef666a        13 months ago       96.9MB
+k8s.gcr.io/heapster                                                          v1.5.1              c41e77c31c91        16 months ago       75.3MB
+k8s.gcr.io/addon-resizer                                                     1.7                 9b0815c87118        2 years ago         39MB
+[root@ip-10-178-162-70 .aws]#
+
+
+[root@ip-10-178-162-70 .aws]# docker commit -m "Taking ngix backup" 3bd8babe122f 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb_new
+sha256:870f190b3d6ca4acbbd403cbc2fa58a3b32af3f9ab713806355c3e0635e7dc5a
+[root@ip-10-178-162-70 .aws]#
+
+3bd8babe122f = is the image ID
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb_new   = ECR repo
+
+
+[root@ip-10-178-162-70 .aws]# docker tag 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb_new 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb_new:v1
+[root@ip-10-178-162-70 .aws]#  docker images
+REPOSITORY                                                                   TAG                 IMAGE ID            CREATED             SIZE
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb_new              latest              870f190b3d6c        4 minutes ago       912MB
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb_new              v1                  870f190b3d6c        4 minutes ago       912MB
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devcore                      1.1.452             36ce436421eb        3 weeks ago         1.42GB
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxcore                 devcore-nginx       c7cac6adc6a6        3 weeks ago         773MB
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb                  wso2ei.11.0         c5e1c2d23600        2 months ago        862MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/amazon-k8s-cni               v1.3.2              b97742ccfd0c        4 months ago        367MB
+k8s.gcr.io/cluster-autoscaler                                                v1.13.1             39c073d73c1e        6 months ago        137MB
+gcr.io/kubernetes-helm/tiller                                                v2.12.0-rc.1        83a87b7c9ddc        6 months ago        81.3MB
+gcr.io/google_containers/metrics-server-amd64                                v0.3.1              61a0c90da56e        9 months ago        40.8MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/pause-amd64              3.1                 9e462c010bf3        12 months ago       742kB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/kube-dns/sidecar         1.14.10             6d73a937004e        12 months ago       41.6MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/kube-dns/kube-dns        1.14.10             4d1881f0ea47        12 months ago       49.5MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/kube-dns/dnsmasq-nanny   1.14.10             396d4823052d        12 months ago       40.4MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/kube-proxy               v1.10.3             c6fc6eef666a        13 months ago       96.9MB
+k8s.gcr.io/heapster                                                          v1.5.1              c41e77c31c91        16 months ago       75.3MB
+k8s.gcr.io/addon-resizer                                                     1.7                 9b0815c87118        2 years ago         39MB
+[root@ip-10-178-162-70 .aws]#
+
+[root@ip-10-178-162-70 .aws]# docker commit -m "Taking ngix backup" 3bd8babe122f 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb_new
+sha256:870f190b3d6ca4acbbd403cbc2fa58a3b32af3f9ab713806355c3e0635e7dc5a
+[root@ip-10-178-162-70 .aws]# docker images
+REPOSITORY                                                                   TAG                 IMAGE ID            CREATED             SIZE
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb_new              latest              870f190b3d6c        2 seconds ago       912MB
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devcore                      1.1.452             36ce436421eb        3 weeks ago         1.42GB
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxcore                 devcore-nginx       c7cac6adc6a6        3 weeks ago         773MB
+549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb                  wso2ei.11.0         c5e1c2d23600        2 months ago        862MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/amazon-k8s-cni               v1.3.2              b97742ccfd0c        4 months ago        367MB
+k8s.gcr.io/cluster-autoscaler                                                v1.13.1             39c073d73c1e        6 months ago        137MB
+gcr.io/kubernetes-helm/tiller                                                v2.12.0-rc.1        83a87b7c9ddc        6 months ago        81.3MB
+gcr.io/google_containers/metrics-server-amd64                                v0.3.1              61a0c90da56e        9 months ago        40.8MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/pause-amd64              3.1                 9e462c010bf3        12 months ago       742kB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/kube-dns/sidecar         1.14.10             6d73a937004e        12 months ago       41.6MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/kube-dns/kube-dns        1.14.10             4d1881f0ea47        12 months ago       49.5MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/kube-dns/dnsmasq-nanny   1.14.10             396d4823052d        12 months ago       40.4MB
+602401143452.dkr.ecr.eu-central-1.amazonaws.com/eks/kube-proxy               v1.10.3             c6fc6eef666a        13 months ago       96.9MB
+k8s.gcr.io/heapster                                                          v1.5.1              c41e77c31c91        16 months ago       75.3MB
+k8s.gcr.io/addon-resizer                                                     1.7                 9b0815c87118        2 years ago         39MB
+[root@ip-10-178-162-70 .aws]#
+
+
+[root@ip-10-178-162-70 .aws]# docker push 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb_new:v1
+The push refers to repository [549615285520.dkr.ecr.eu-central-1.amazonaws.com/devnginxesb_new]
+913fdfd0457e: Pushed
+b86cdeb85e15: Pushed
+01adc7657995: Pushed
+5a01475e1753: Pushed
+78fec63f4247: Pushed
+9f19490dfaa2: Pushed
+372ad48ded1b: Pushed
+f2ecf722bf19: Pushed
+65af51eb8902: Pushed
+c2b5b2afaf5a: Pushed
+5f73f081ba17: Pushed
+5202120caa0f: Pushed
+276c83bef1fc: Pushed
+a54998ef3134: Pushed
+f4045c41d3fc: Pushed
+17b253acb39f: Pushed
+30166656063d: Pushed
+3e0484035049: Pushed
+eeaa0181e9ff: Pushed
+15e5fcda40ec: Pushed
+a830c16d264d: Pushed
+4146e625e54b: Pushed
+5ef02d42cdaf: Pushed
+439a12f95821: Pushed
+857b94a3feef: Pushed
+580ed08b21d8: Pushed
+2ddb26587f79: Pushed
+94b5035a4204: Pushed
+07c721ea87fb: Pushed
+674ca217742c: Pushed
+423ae37c32b8: Pushed
+2bfa7837e460: Pushed
+22edb0e86a5b: Pushed
+37db74b0557f: Pushed
+8872372db874: Pushed
+69d83060db2a: Pushed
+7464954c18a9: Pushed
+cf516324493c: Pushed
+v1: digest: sha256:bfcc244bf954bd8dd56d2f1dc8c8d24c6aa9b03621bce6b28cc6c06ad7509906 size: 8267
+[root@ip-10-178-162-70 .aws]#

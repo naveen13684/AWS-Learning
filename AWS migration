@@ -1,0 +1,165 @@
+1) import the Disk from vmware 
+2) create a bucket
+3) upload the disk to s3 bucket 
+4) Create a policy 
+5) create a Role and attach above created policy to role
+6) create a user and make sure User has required role and policy
+7) configure awscli
+8) create a container file and use below commands
+
+https://docs.aws.amazon.com/vm-import/latest/userguide/vmie_prereqs.html
+
+aws ec2 import-image --description "Linux-64bit-mysqlDB" --disk-containers file://C:\Users\nk020131\Desktop\container.json 
+
+aws ec2 describe-import-image-tasks --import-task-ids import-ami-0e68ff322d4258158
+
+
+
+1) Export the VM from vmware workstation or vConverter to vmdk or ova format
+2) create a S3 bucket and upload vmdk disk file to your bucket
+3) create a policy 
+4) VM Import Service Role
+aws iam create-role --role-name vmimport --assume-role-policy-document file://trust-policy.json
+
+{
+   "Version": "2012-10-17",
+   "Statement": [
+      {
+         "Effect": "Allow",
+         "Principal": { "Service": "vmie.amazonaws.com" },
+         "Action": "sts:AssumeRole",
+         "Condition": {
+            "StringEquals":{
+               "sts:Externalid": "vmimport"
+            }
+         }
+      }
+   ]
+}
+
+5) create a user
+
+
+https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html
+
+
+C:\Users\nk020131>aws ec2 import-image --description "Linux-64bit-mysqlDB" --disk-containers file://C:\Users\nk020131\Desktop\container.json
+{
+    "Status": "active",
+    "Description": "Linux-64bit-mysqlDB",
+    "SnapshotDetails": [
+        {
+            "UserBucket": {
+                "S3Bucket": "naveenbrains",
+                "S3Key": "rhel-no-gui.ova"
+            },
+            "DiskImageSize": 0.0,
+            "Format": "OVA"
+        }
+    ],
+    "Progress": "2",
+    "StatusMessage": "pending",
+    "ImportTaskId": "import-ami-0e68ff322d4258158"
+}
+
+C:\Users\nk020131>aws ec2 describe-import-image-tasks --import-task-ids import-ami-0e68ff322d4258158
+{
+    "ImportImageTasks": [
+        {
+            "Status": "active",
+            "Description": "Linux-64bit-mysqlDB",
+            "SnapshotDetails": [],
+            "Progress": "28",
+            "StatusMessage": "converting",
+            "ImportTaskId": "import-ami-0e68ff322d4258158"
+        }
+    ]
+}
+
+C:\Users\nk020131>
+
+C:\Users\nk020131>aws ec2 describe-import-image-tasks --import-task-ids import-ami-0e68ff322d4258158
+{
+    "ImportImageTasks": [
+        {
+            "Status": "active",
+            "Description": "Linux-64bit-mysqlDB",
+            "SnapshotDetails": [
+                {
+                    "Status": "active",
+                    "UserBucket": {
+                        "S3Bucket": "naveenbrains",
+                        "S3Key": "rhel-no-gui.ova"
+                    },
+                    "DiskImageSize": 1608309760.0,
+                    "Format": "VMDK"
+                }
+            ],
+            "Progress": "28",
+            "StatusMessage": "converting",
+            "ImportTaskId": "import-ami-0e68ff322d4258158"
+        }
+    ]
+}
+
+C:\Users\nk020131>
+
+
+C:\Users\nk020131>aws ec2 describe-import-image-tasks --import-task-ids import-ami-0e68ff322d4258158
+{
+    "ImportImageTasks": [
+        {
+            "Status": "active",
+            "LicenseType": "BYOL",
+            "Description": "Linux-64bit-mysqlDB",
+            "Platform": "Linux",
+            "Architecture": "x86_64",
+            "SnapshotDetails": [
+                {
+                    "Status": "completed",
+                    "DeviceName": "/dev/sda1",
+                    "Format": "VMDK",
+                    "DiskImageSize": 1608309760.0,
+                    "UserBucket": {
+                        "S3Bucket": "naveenbrains",
+                        "S3Key": "rhel-no-gui.ova"
+                    },
+                    "SnapshotId": "snap-0a3ef7337f754f2d7"
+                }
+            ],
+            "Progress": "86",
+            "StatusMessage": "preparing ami",
+            "ImportTaskId": "import-ami-0e68ff322d4258158"
+        }
+    ]
+}
+
+C:\Users\nk020131>aws ec2 describe-import-image-tasks --import-task-ids import-ami-0e68ff322d4258158
+{
+    "ImportImageTasks": [
+        {
+            "Status": "completed",
+            "LicenseType": "BYOL",
+            "Description": "Linux-64bit-mysqlDB",
+            "ImageId": "ami-0e353b21701970b44",
+            "Platform": "Linux",
+            "Architecture": "x86_64",
+            "SnapshotDetails": [
+                {
+                    "Status": "completed",
+                    "DeviceName": "/dev/sda1",
+                    "Format": "VMDK",
+                    "DiskImageSize": 1608309760.0,
+                    "UserBucket": {
+                        "S3Bucket": "naveenbrains",
+                        "S3Key": "rhel-no-gui.ova"
+                    },
+                    "SnapshotId": "snap-0a3ef7337f754f2d7"
+                }
+            ],
+            "ImportTaskId": "import-ami-0e68ff322d4258158"
+        }
+    ]
+}
+
+C:\Users\nk020131>

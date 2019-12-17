@@ -1,0 +1,297 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "CloudWatch Alarms",
+    "Parameters": {
+        "DBName": {
+            "Description": "Choose a DB Name",
+            "Type": "String"
+        },
+        "DBInstanceIdentifier": {
+            "Description": "Choose an instance id",
+            "Type": "String"
+        },
+        "criticalsnsarn": {
+            "Description": "Please provide an ARN of SNS topic - CRITICAL Type",
+            "Type": "String"
+        },
+        "warningsnsarn": {
+            "Description": "Please provide an ARN of SNS topic - WARNING Type",
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "DBActiveTransactions": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "DBName=${DBName} DBInstanceIdentifier=${DBInstanceIdentifier} - Number of ActiveTransactions"
+                },
+                "Namespace": "AWS/RDS",
+                "MetricName": "ActiveTransactions",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "500",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "DBInstanceIdentifier",
+                        "Value": {
+                            "Ref": "DBInstanceIdentifier"
+                        }
+                    }
+                ]
+            }
+        },
+        "DBCommitLatency": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "DBName=${DBName} DBInstanceIdentifier=${DBInstanceIdentifier} - Database CommitLatency"
+                },
+                "Namespace": "AWS/RDS",
+                "MetricName": "CommitLatency",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "15",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "DBInstanceIdentifier",
+                        "Value": {
+                            "Ref": "DBInstanceIdentifier"
+                        }
+                    }
+                ]
+            }
+        },
+            "DBCPUUtilizationWarning": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "DBName=${DBName} DBInstanceIdentifier=${DBInstanceIdentifier} - WARNING!! CPU Utilization reached 85%."
+                },
+                "Namespace": "AWS/RDS",
+                "MetricName": "CPUUtilization",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "85",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "DBInstanceIdentifier",
+                        "Value": {
+                            "Ref": "DBInstanceIdentifier"
+                        }
+                    }
+                ]
+            }
+        },
+           "DBCPUUtilizationCritical": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "DBName=${DBName} DBInstanceIdentifier=${DBInstanceIdentifier} - CRITICAL!! CPU Utilization is more than 95%."
+                },
+                "Namespace": "AWS/RDS",
+                "MetricName": "CPUUtilization",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "95",
+                "AlarmActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "DBInstanceIdentifier",
+                        "Value": {
+                            "Ref": "DBInstanceIdentifier"
+                        }
+                    }
+                ]
+            }
+        },
+                "DBNetworkReceiveThroughput": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "DBName=${DBName} DBInstanceIdentifier=${DBInstanceIdentifier} Database NetworkReceiveThroughput"
+                },
+                "Namespace": "AWS/RDS",
+                "MetricName": "NetworkReceiveThroughput",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "3000",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "DBInstanceIdentifier",
+                        "Value": {
+                            "Ref": "DBInstanceIdentifier"
+                        }
+                    }
+                ]
+            }
+        },
+                "DBNetworkTransmitThroughput": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "DBName=${DBName} DBInstanceIdentifier=${DBInstanceIdentifier} Database NetworkTransmitThroughput"
+                },
+                "Namespace": "AWS/RDS",
+                "MetricName": "NetworkTransmitThroughput",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "3000",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "DBInstanceIdentifier",
+                        "Value": {
+                            "Ref": "DBInstanceIdentifier"
+                        }
+                    }
+                ]
+            }
+        },
+                "DBDatabaseConnections": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "DBName=${DBName} DBInstanceIdentifier=${DBInstanceIdentifier} Number of Database Connections"
+                },
+                "Namespace": "AWS/RDS",
+                "MetricName": "DatabaseConnections",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "400",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "DBInstanceIdentifier",
+                        "Value": {
+                            "Ref": "DBInstanceIdentifier"
+                        }
+                    }
+                ]
+            }
+        },
+                "DBFreeLocalStorage": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "DBName=${DBName} DBInstanceIdentifier=${DBInstanceIdentifier} - Database Running out of local Free Space!!"
+                },
+                "Namespace": "AWS/RDS",
+                "MetricName": "FreeLocalStorage",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "LessThanThreshold",
+                "Threshold": "16106127360",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "DBInstanceIdentifier",
+                        "Value": {
+                            "Ref": "DBInstanceIdentifier"
+                        }
+                    }
+                ]
+            }
+        }
+
+    }
+}

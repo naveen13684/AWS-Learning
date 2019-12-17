@@ -1,0 +1,112 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "CloudWatch Alarms",
+    "Parameters": {
+        "LoadBalancerName": {
+            "Description": "Choose a ELB Name",
+            "Type": "String"
+        },
+        "networkELBdns": {
+            "Description": "Choose a networkDNS Name",
+            "Type": "String"
+        },
+        "account": {
+            "Description": "AWS account for application",
+            "Type": "String"
+        },
+        "targetgroup": {
+            "Description": "AWS account for application",
+            "Type": "String"
+        },
+        "criticalsnsarn": {
+            "Description": "Please provide an ARN of SNS topic - CRITICAL Type",
+            "Type": "String"
+        },
+        "warningsnsarn": {
+            "Description": "Please provide an ARN of SNS topic - WARNING Type",
+            "Type": "String"
+        }
+    },
+    "Resources": {
+	    "UnHealthyHostCountNetworkELB": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "NetworkELBname=${LoadBalancerName} NetworkDNS=${networkELBdns} Application_Account=${account} - Number of UnHealthyHostCounts - WARNING"
+                },
+                "Namespace": "AWS/NetworkELB",
+                "MetricName": "UnHealthyHostCount",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "Threshold": "3",
+                "AlarmActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "warningsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "LoadBalancer",
+                        "Value": {
+                            "Ref": "LoadBalancerName"
+                        }
+                    },
+                    {
+                        "Name": "TargetGroup",
+                        "Value": {
+                            "Ref": "targetgroup"
+                        }
+                    }
+                ]
+            }
+        },
+	    "UnHealthyHostCountNetworkELB": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "AlarmDescription": {
+                    "Fn::Sub": "NetworkELBname=${LoadBalancerName} NetworkDNS=${networkELBdns} Application_Account=${account} - Number of UnHealthyHostCounts - CRITICAL"
+                },
+                "Namespace": "AWS/NetworkELB",
+                "MetricName": "UnHealthyHostCount",
+                "Statistic": "Minimum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "Threshold": "3",
+                "AlarmActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "OKActions": [
+                    {
+                        "Ref": "criticalsnsarn"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "LoadBalancer",
+                        "Value": {
+                            "Ref": "LoadBalancerName"
+                        }
+                    },
+                    {
+                        "Name": "TargetGroup",
+                        "Value": {
+                            "Ref": "targetgroup"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

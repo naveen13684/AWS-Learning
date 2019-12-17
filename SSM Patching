@@ -1,0 +1,38 @@
+what do I know?
+==============
+1)How do you execute command on multiple instances?
+2)How do I bootstrap my instance and maintain my sate?
+3)Know what is installed on my instances?
+4)Maintenance window of the instance?
+5)patch my windows AWS EC2 instances?
+
+AWS Systemts Manger-SSM
+=======================
+1) Run Command and State Manager   - Deploy Configure and Administer
+2) Maintenance Window and Parameter Store - Shared Capabilities
+3) Inverntory , Patch Manager, Automation - Track and Update
+
+Advantages of SSM
+==================
+1) Supports for hybrid architecture
+2) cross-platfrom
+3) Scalable
+4) Secure
+5) Easy to Write automation
+6) Expected Reduction in Total Cost of Ownership (TCO)
+
+Use cases of Run Command
+=========================
+
+
+
+
+
+
+
+
+
+
+
+
+

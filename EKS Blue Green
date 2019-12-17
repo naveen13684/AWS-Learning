@@ -1,0 +1,156 @@
+Main Script
+======================================================================================================================================
+
+#!/bin/sh
+export DEPLOY_PATH=$(pwd)
+export PATH=$DEPLOY_PATH/bin:$PATH
+file=`echo $FILE_NAME | cut -f 1 -d .`
+export NEW_IMAGE="$AWS_ECR/$REPOSITORY:${file}_$BUILD_NUMBER"
+
+#Setting the kubeconfig variable
+for f in `ls $DEPLOY_PATH/EKS/$ENV_TYPE/.kube/ | grep config`
+do
+   export KUBECONFIG="$DEPLOY_PATH/EKS/$ENV_TYPE/.kube/$f:$KUBECONFIG";
+done
+
+
+
+if [ "$FIRST_TIME" == "true" ]; then
+                echo -e "\n\n ******** First Ever Deployment Creating the Objects in Sequence ***********\n\n"
+                kubectl apply -f $DEPLOY_PATH/EKS/$ENV_TYPE/$APP_NAME.yaml
+
+                if [ $? -eq 0 ]; then
+                        echo -e "\nInvoking the Deployment Script......"
+                        sh first_deploy.sh #calling the deployment script
+                if [ $? -ne 0 ]; then #if any retruned by the first_deploy.sh script.
+                                echo -e "\n..Error Encountred During the First Deployment..Please check"
+                                exit 1
+                        fi
+
+                else
+                        echo -e "\nError Encountered Terminating the Deployment\n"
+                        exit 1
+
+        fi
+
+else
+                echo -e "\n*****Performing Blue-Green Deployment*******"
+
+                if [ -f $DEPLOY_PATH/EKS/$ENV_TYPE/green_${APP_NAME}_deploy.yaml ] && [ -f $DEPLOY_PATH/EKS/$ENV_TYPE/blue-green-${APP_NAME}.sh ]; then
+                        cp $DEPLOY_PATH/EKS/$ENV_TYPE/green_${APP_NAME}_deploy.yaml $(pwd)
+                        cp $DEPLOY_PATH/EKS/$ENV_TYPE/blue-green-${APP_NAME}.sh $(pwd)/blue-green.sh
+                        echo -e "\n******Invoking the Script******\n"
+                        sh blue-green.sh
+
+                        if [ $? -ne 0 ]; then #if any error returned by blue-green.sh Script.
+                                echo -e "\n..Error Encountred During the Deployment..Please check"
+                        exit 1
+                        fi
+
+                else
+                        echo -e "\n Deployment YAMl & Blue Screen Script are missing.. Terminating the Deployment\n"
+                        exit 1
+                fi
+
+
+fi
+rm green_${APP_NAME}_deploy.yaml
+rm blue-green.sh
+echo -e "\n ***************END OF SCRIPT ***********\n"
+=======================================================================================================================================
+deploy.sh
+=======================================================================================================================================
+#!/bin/sh
+
+echo -e "\n Creating the Deployment $DEPLOYMENT_NAME ------------ \n "
+cp $DEPLOY_PATH/EKS/$ENV_TYPE/${APP_NAME}_deploy.yaml $(pwd)
+image1=`grep -i image: ${APP_NAME}_deploy.yaml |awk '{print $2}'`
+echo `sed -i "s|${image1}|${NEW_IMAGE}|g" ${APP_NAME}_deploy.yaml`
+
+kubectl apply -f ${APP_NAME}_deploy.yaml
+  if [ $? -ne 0 ]; then
+    echo -e "\nFirst Deployment failed.."
+	exit 1
+  fi 
+  
+echo -e "\n---------------Deployment Status ------------\n"
+kubectl rollout status deployment/$DEPLOYMENT_NAME -n $NAMESPACE
+
+echo -e "\n------------ Post Deployment---------\n"
+kubectl get deployments/$DEPLOYMENT_NAME -o wide -n $NAMESPACE
+
+=======================================================================================================================================
+bluegreen.sh
+=======================================================================================================================================
+#!/bin/sh
+# Created by - Mahesh Gunda
+
+selector=`kubectl get svc $SERVICE -o wide -n $NAMESPACE | awk 'FNR == 2 {print $7}' | cut -f1 -d "="`
+old_deployment=`kubectl get svc $SERVICE -o wide -n $NAMESPACE | awk 'FNR == 2 {print $7}' | cut -f2 -d "="`
+replicas=`kubectl get deploy $old_deployment -n $NAMESPACE | awk 'FNR == 2 {print $2}'`
+echo -e "\nSERVICE is now pointed to ----> $old_deployment"
+prev_image=`kubectl get deploy/$old_deployment -o wide -n $NAMESPACE | awk 'FNR == 2 {print $8}'`
+echo -e "\nCurrent Image of the Deployment ----> $prev_image"
+
+if [ ! "$prev_image" ]; then
+     echo -e "\nDeployment Doesn't exits.. Exiting from the Deployment..!"
+     exit 1
+else
+	  #Extracting the Image Name from File
+	  image1=`grep -i "image:" green_${APP_NAME}_deploy.yaml |awk '{print $2}'| head -1`
+      # Replacing with the New Image	  
+	  echo `sed -i "s|${image1}|${NEW_IMAGE}|g" green_${APP_NAME}_deploy.yaml` 
+	  echo -n "New Image ==>"
+	  # Confirming the Image updated in Deployment File
+	  echo -n `grep -i "image:" green_${APP_NAME}_deploy.yaml |awk '{print $2}'`
+	  # Changing the deployment name
+	  echo `sed -i "s|JOB_ID|${JOB_ID}|g" green_${APP_NAME}_deploy.yaml` 
+	  echo -e "\n Creating New Deployment $DEPLOYMENT_NAME-$JOB_ID with new Image\n"
+	  kubectl apply -f green_${APP_NAME}_deploy.yaml
+	  if [ $? -eq 1 ]; then
+		echo -e "\n Error Encountered During Deployment.. Please check! \n Exit!\n"
+		exit 1
+	  fi 
+	  success=NULL
+	  count=0
+	  log="WSO2 Carbon started"
+	  # Getting the PODs name of new deployment
+	  pod=`kubectl get pods -n $NAMESPACE|grep $DEPLOYMENT_NAME-$JOB_ID|awk 'FNR ==1 {print $1}'`
+	  echo -e "\n New Pod Name ====>$pod"
+	  echo -e "\n Waiting for the SSO to Come Up... Please be Patient!!!"
+	  sleep 40
+	  while [ 1 ]
+	  do
+	  kubectl exec $pod -c splunk-sidecar cat /var/log/splunklogs/wso2carbon.log|grep -i "$log"
+	  if [ $? -eq 0 ]; then
+		  echo -e "\n SSO Application is Up"
+		success="true"
+		  break
+	  elif [ $count -eq 350 ]; then
+		 echo -e "\n SSO Didnt Came up even after 400 seconds.. Please check the logs and fix the issue"
+		 success="false"
+		 break
+	  else
+		 sleep 1
+		 count=$((count+1))
+	  fi
+	  done
+      #Switching service to new deployment 
+	  if [ "$success" == "true" ]; then
+		 echo -e "\n Deployment is Successfull... "
+		 kubectl get deploy/${DEPLOYMENT_NAME}-${JOB_ID} -n $NAMESPACE
+		 echo -e "\n Current  $SERVICE Selector values ....\n"
+		 kubectl get svc $SERVICE -n $NAMESPACE -o wide | awk 'FNR == 2 {print $7}'
+		 echo -e "\n Pointing the Service to New Deployment ${DEPLOYMENT_NAME}-${JOB_ID}"
+		 kubectl patch svc $SERVICE -n $NAMESPACE -p "{\"spec\":{\"selector\": {\"${selector}\": \"${DEPLOYMENT_NAME}-${JOB_ID}\" }}}"
+		 echo -e "\n Successfully Patched the SERVICE .... \n"
+		 kubectl get svc $SERVICE -n $NAMESPACE -o wide
+		 echo -e "\n Scaling down the Old deployment $old_deployment .... \n"
+		 kubectl scale deployment $old_deployment -n $NAMESPACE --replicas=0
+		 kubectl get deploy $old_deployment -n $NAMESPACE
+	  else
+		 echo -e "\n Deployment didnt successed!!\n Please check and Fix the Error, \n Ensure to delete the new deployment ${DEPLOYMENT_NAME}-${JOB_ID} and Retry..!"
+		 exit 1
+	  fi
+
+fi

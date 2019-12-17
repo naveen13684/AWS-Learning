@@ -1,0 +1,37 @@
+#!/bin/bash
+cd /tmp
+sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+
+#adding path to sudoers file
+sudo sed --in-place '/secure_path/s/.*/&:\/usr\/local\/bin/' /etc/sudoers
+
+#installing pre-requisites for ansible [ requires python,git,boto,boto3,botocore and pip ]
+sudo yum install python -y
+sudo yum install git -y
+sudo easy_install pip
+sudo pip install --upgrade pip
+sudo pip install boto
+sudo pip install --upgrade boto
+sudo pip install boto3
+sudo pip install --upgrade boto3
+sudo pip install botocore
+sudo pip install --upgrade botocore
+
+#Installing ansible
+sudo pip install -U ansible
+sudo mkdir -p /etc/ansible
+sudo touch /etc/ansible/hosts
+
+#Edit the ansible.cfg file and put your .pem file for private_key_file='aws.pem'
+sudo wget https://raw.githubusercontent.com/naveen13684/AWS-Learning/master/Ansible/ansible.cfg -P /etc/ansible
+
+#sample apache installation playbook
+sudo mkdir -p /etc/ansible/playbooks
+sudo wget https://raw.githubusercontent.com/naveen13684/AWS-Learning/master/Ansible/httpd_apache/install_httpd.yml -P /etc/ansible/playbooks
+sudo wget https://raw.githubusercontent.com/naveen13684/AWS-Learning/master/Ansible/httpd_apache/uninstall_httpd.yml -P /etc/ansible/playbooks
+sudo wget https://raw.githubusercontent.com/naveen13684/AWS-Learning/master/Ansible/httpd_apache/install_apache.yml -P /etc/ansible/playbooks
+sudo wget https://raw.githubusercontent.com/naveen13684/AWS-Learning/master/Ansible/httpd_apache/uninstall_apache.yml -P /etc/ansible/playbooks
+sudo wget https://raw.githubusercontent.com/naveen13684/AWS-Learning/master/Ansible/s3/s3_bucket_create.yml -P /etc/ansible/playbooks
+sudo wget https://raw.githubusercontent.com/naveen13684/AWS-Learning/master/Ansible/s3/s3_bucket_delete.yml -P /etc/ansible/playbooks
+sudo wget https://raw.githubusercontent.com/naveen13684/AWS-Learning/master/Ansible/s3/s3_bucket_put.yml -P /etc/ansible/playbooks
+sudo wget https://raw.githubusercontent.com/naveen13684/AWS-Learning/master/Ansible/s3/s3_bucket_get.yml -P /etc/ansible/playbooks

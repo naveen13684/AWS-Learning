@@ -1,0 +1,11 @@
+Encrypt:
+========
+aws kms encrypt --key-id <KMSID> --plaintext fileb://ExamplePlaintextFile --output text --query CiphertextBlob | base64 --decode > ExampleEncryptedFile
+
+aws kms encrypt --key-id <KMSID> --plaintext fileb://splunk.txt --output text --query CiphertextBlob | base64 --decode > splunk_encrypted.txt
+
+Decrypt:
+=======
+aws kms decrypt --ciphertext-blob fileb://ExampleEncryptedFile --output text --query Plaintext | base64 --decode > ExamplePlaintextFile
+
+aws kms decrypt --ciphertext-blob fileb://splunk_encrypted.txt --output text --query Plaintext | base64 --decode > splunk_decrypted.txt

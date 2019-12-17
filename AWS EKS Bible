@@ -1,0 +1,838 @@
+AWS Service annotations
+========================
+service.beta.kubernetes.io/aws-load-balancer-access-log-emit-interval (in minutes)
+service.beta.kubernetes.io/aws-load-balancer-access-log-enabled (true|false)
+service.beta.kubernetes.io/aws-load-balancer-access-log-s3-bucket-name
+service.beta.kubernetes.io/aws-load-balancer-access-log-s3-bucket-prefix
+service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags (comma-separated list of key=value)
+service.beta.kubernetes.io/aws-load-balancer-backend-protocol (http|https|ssl|tcp)
+service.beta.kubernetes.io/aws-load-balancer-connection-draining-enabled (true|false)
+service.beta.kubernetes.io/aws-load-balancer-connection-draining-timeout (in seconds)
+service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout (in seconds, default 60)
+service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled (true|false)
+service.beta.kubernetes.io/aws-load-balancer-extra-security-groups (comma-separated list)
+service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold
+service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval
+service.beta.kubernetes.io/aws-load-balancer-healthcheck-timeout
+service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold
+service.beta.kubernetes.io/aws-load-balancer-internal (true|false)
+service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
+service.beta.kubernetes.io/aws-load-balancer-ssl-cert (IAM or ACM ARN)
+service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy
+service.beta.kubernetes.io/aws-load-balancer-ssl-ports (default '*')
+service.beta.kubernetes.io/aws-load-balancer-type: nlb
+
+
+
+
+
+
+
+
+docker commit {name of the container} - create image from running container
+docker <save or export> mdm2 > dev-mdm.tar - to save the image created in above command into tar
+
+
+Steps to setup EKS:
+---------------------------------------
+---------------------------------------
+curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+unzip awscli-bundle.zip
+./awscli-bundle/install -i /usr/aws -b /usr/bin/aws
+aws --version
+
+aws configure
+aws sts get-caller-identity
+
+curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.11.5/2018-12-06/bin/linux/amd64/aws-iam-authenticator
+chmod +x ./aws-iam-authenticator
+cp ./aws-iam-authenticator /usr/bin/aws-iam-authenticator && export PATH=/usr/bin:$PATH
+echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+aws-iam-authenticator help
+
+aws eks update-kubeconfig --name eu-dev-cg
+
+curl -O https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2018-11-07/aws-auth-cm.yaml
+mv aws-auth-cm.yaml .kube/
+Replace the <ARN of instance role (not instance profile)> snippet with the NodeInstanceRole value
+kubectl apply -f aws-auth-cm.yaml
+
+To Import Dokcer Images of DevSSO-
+----------------------------------------- 
+-----------------------------------------
+docker import https://s3.amazonaws.com/ml-is-bucket/is_release15_1.2.149.tar.gz
+docker tag 5802c50b42b1 devsso:is_sso
+docker rmi 5802c50b42b1
+docker rmi image_name:version/8da68480db14
+
+
+To Import Docker Images of DevCP-EKSAdmin-
+------------------------------------------
+------------------------------------------
+docker import https://s3.amazonaws.com/docker-images1508/docker.verifone.com-appcatalog-dev-1.2.495.tar
+docker import https://s3.amazonaws.com/docker-images1508/docker.verifone.com-midtier-dev:r15_1.2.2404.tar
+docker import https://s3.amazonaws.com/docker-images1508/docker.verifone.com-ums-dev:1.2.1208.tar
+docker import https://s3.amazonaws.com/docker-images1508/produsnginxcore.tar
+
+
+Command to create container from image:
+-------------------------------------------
+-------------------------------------------
+docker create --name nginx_base -p 80:80 nginx:latest
+
+
+Tag and Push images of DevSSO to devsso ECR:
+----------------------------------------------
+----------------------------------------------
+aws ecr get-login --registry-ids 549615285520 --region eu-central-1
+docker tag verifone_nginx:latest 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devsso:nginx
+docker push 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devsso:nginx
+docker tag devsso:is_sso 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devsso:is_ssov_1.0
+docker push 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devsso:is_ssov_1.0
+
+
+aws ecr get-login --registry-ids 161764708719 --region us-east-1
+docker tag nginxcore:latest 161764708719.dkr.ecr.us-east-1.amazonaws.com/cgdev:corenginx
+docker push 161764708719.dkr.ecr.us-east-1.amazonaws.com/cgdev:corenginx
+
+
+Tag and Push images of DevCP to devcp ECR:
+---------------------------------------------
+---------------------------------------------
+aws ecr get-login --registry-ids 549615285520 --region eu-central-1
+docker tag e2b54b960b22 devcp:ums-dev-1.2.1208
+docker tag 7a5ec910dbde devcp:midtier-dev-r15_1.2.2404
+docker tag ea2be0795d5a devcp:appcatalog-dev-1.2.495
+
+docker tag devcp:ums-dev-1.2.1208 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devcp:ums-dev-1.2.1208
+docker push 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devcp:ums-dev-1.2.1208
+
+docker tag devcp:midtier-dev-r15_1.2.2404 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devcp:midtier-dev-r15_1.2.2404
+docker push 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devcp:midtier-dev-r15_1.2.2404
+
+docker tag devcp:appcatalog-dev-1.2.495 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devcp:appcatalog-dev-1.2.495
+docker push 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devcp:appcatalog-dev-1.2.495
+
+
+Generic Deployment Yaml:
+--------------------------------------------------
+--------------------------------------------------
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: is-sso
+  labels:
+    app: is-sso
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: is-sso
+  template:
+    metadata:
+      labels:
+        app: is-sso
+    spec:
+      containers:
+      - name: is-sso
+        image: 549615285520.dkr.ecr.eu-central-1.amazonaws.com/devsso:is_ssov_1.0
+	    envFrom:
+        - configMapRef:
+            name: devissso-config
+            optional: true
+
+Deployment yaml with Volume mount and volume claims:
+----------------------------------------------------------
+----------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: certificaterequest
+  labels:
+    app: certificaterequest
+spec:
+  selector:
+    matchLabels:
+      app: certificaterequest
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: certificaterequest
+    spec:
+      containers:
+      - name: certificaterequest
+        command: [ "/bin/bash", "-ce", "tail -f /dev/null" ]
+        image: 549615285520.dkr.ecr.eu-central-1.amazonaws.com/anddev:certificate-request-latest
+        ports:
+        - containerPort: 8449
+        envFrom:
+        - configMapRef:
+            name: certificaterequest-config
+            optional: true
+        volumeMounts:
+          # nfs-mounts
+        - name: shared-application
+          mountPath: /opt/applications/carbon/certificate-request
+        - name: shared-ca
+          mountPath: /opt/applications/cert/CA
+      volumes:
+         # nfs-volumes
+      - name: shared-ca
+        persistentVolumeClaim:
+          claimName: shared-certreq-volume-claim
+      - name: shared-application
+        persistentVolumeClaim:
+          claimName: shared-certificate-request-volume-claim
+
+		  
+Deployment yaml for Volumes: 
+------------------------------------------------------
+------------------------------------------------------
+# Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: shared-certreq-volume
+  labels:
+    purpose: mount-certreq-volume
+spec:
+  capacity:
+    storage: 4Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: <IP>
+    path: "/var/nfs/cert/CA"
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: shared-certificate-request-volume
+  labels:
+    purpose: mount-certificate-request-volume
+spec:
+  capacity:
+    storage: 4Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: <IP>
+    path: "/var/nfs/certificate-request"
+	
+
+Deployment yaml for volume-claims:
+-----------------------------------------
+-----------------------------------------
+# Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-certreq-volume-claim
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 4Gi
+  storageClassName: ""
+  selector:
+      matchLabels:
+        purpose: mount-certreq-volume
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-certificate-request-volume-claim
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 4Gi
+  storageClassName: ""
+  selector:
+      matchLabels:
+        purpose: mount-certificate-request-volume
+		
+
+Deployment yaml to expose a service:
+------------------------------------------------
+------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: ae-nginx
+  namespace: default
+  labels:
+    app: ae-nginx
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  externalTrafficPolicy: Local
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: aenginx
+  type: LoadBalancer
+  
+also can look at the link : https://blog.giantswarm.io/load-balancer-service-use-cases-on-aws/
+
+Command to delete Evicted pods in one shot:
+-----------------------------------------------
+-----------------------------------------------
+
+kubectl get po --all-namespaces --field-selector 'status.phase!=Evicted' -o json | kubectl delete -f -
+
+			
+Command to create ConfigMap:
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+kubectl create configmap dev-appcatalog-config --from-file=./conf
+
+kubectl create configmap dev-appcatalog-config --from-env-file /root/appcatalog/conf
+
+kubectl config set-context $(kubectl config current-context) --namespace=sso  
+
+
+Command to create Tar file in linux:
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+tar -czvf fe-cdn-dev.tar.gz cpui 
+
+
+Command to Copy files form S3 to local host:
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+aws s3 cp s3://big-datums-tmp/ ./ --recursive
+
+
+Command to sync buckets between s3 buckets:
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+Prerequisites
+Two AWS accounts(One for source S3 bucket and another for destination S3 bucket)
+Create an IAM user in destination AWS account (see this doc to create IAM user for AWS account).
+Configure AWS CLI in local machine with previously created IAM user credentials (see this doc to configure AWS CLI).
+Step 1: Get the 12 digit destination AWS account number
+Sign in to destination AWS account. Go to Support → Support center and copy account number from there.
+
+Step 2: Setup source S3 bucket
+Sign in to source AWS account. Create a bucket in S3(To create bucket, follow this doc). Attach the following policy to the bucket(To attach bucket policy, follow this doc). Upload some test files which are meant to be copied automatically to the destination bucket.
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DelegateS3Access",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::968741681021:root"
+            },
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::sso-login-skins/*",
+                "arn:aws:s3:::sso-login-skins"
+            ]
+        }
+    ]
+}
+
+Step 3: Setup destination S3 bucket
+Sign in to destination AWS account. Create a bucket in S3(To create bucket, follow this doc).
+
+Step 4: Attach policy to IAM user in destination AWS account
+Attach the following policy to the IAM user created previously in the destination AWS account (see this doc to add policy to IAM user).
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::sso-login-skins",
+                "arn:aws:s3:::sso-login-skins/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": [
+                "arn:aws:s3:::sso-login-skins-new",
+                "arn:aws:s3:::sso-login-skins-new/*"
+            ]
+        }
+    ]
+}
+
+
+Step 5: Sync S3 objects to destination
+If above steps are completed, we can copy S3 bucket objects from source account to destination account by using the following AWS CLI command.
+
+aws s3 sync s3://SOURCE-BUCKET-NAME s3://DESTINATION-BUCKET-NAME --source-region SOURCE-REGION-NAME --region DESTINATION-REGION-NAME
+
+
+"aws s3 sync s3://cgdev-cloudability s3://cgdev-cloudability-new --source-region us-east-1 --region eu-central-1"
+
+Command to cp to aws bucket: aws s3 cp --recursive local_dir/ s3://my-s3-bucket 
+
+Nginx_NLB.yaml:
+-------------------
+-------------------
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: default
+  labels:
+    app: nginx
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  externalTrafficPolicy: Local
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+type: LoadBalancer
+
+
+Code to setup Tripwire:
+-------------------------------
+-------------------------------
+
+service twdaemon status - service check command
+
+#! /bin/bash
+set -ex
+
+sudo mkdir -p /etc/sft/
+
+echo "Add a basic sftd configuration"
+sftcfg=$(cat <<EOF
+---
+#CanonicalName:            "DevCG-EKSAdmin"
+Bastion:                  "nonprodbastion"
+EOF
+)
+
+echo -e "$sftcfg" | sudo tee /etc/sft/sftd.yaml
+
+echo "eyJzIjoiMjQ2YjFmMjYtOTZhMS00MjQyLWE1NDYtODE2YjQ2Zjk4MjViIiwidSI6Imh0dHBzOi8vYXBwLnNjYWxlZnQuY29tIn0=" | sudo tee /var/lib/sftd/enrollment.token
+#!/bin/bash
+cd /root/te_agent_8.6.0.3_en_linux_amd64
+sudo ./te_agent.bin --eula accept --silent --server-host 10.177.122.13 --server-port 9898 --passphrase "7SIiqSs2Ux%LmMg&fLtN@z.6FJAT6Aq8"
+cd /usr/local/tripwire/te/agent/bin/
+sudo ./twdaemon start
+
+
+Command to create group and user:
+------------------------------------
+------------------------------------
+sudo groupadd --system -g 498 verifoneappuser
+sudo useradd --system -g 0 -u 80 verifoneappuser
+
+CFN For Hosted Zone Creatation:
+----------------------------------------
+----------------------------------------
+  AppHostedZone:
+    Type: 'AWS::Route53::HostedZone'
+    Properties:
+      VPCs:
+        - VPCId: !Ref Vpc
+          VPCRegion: !Ref 'AWS::Region'
+      HostedZoneConfig:
+        Comment: Created through cloudformation
+      HostedZoneTags:
+        - Value: !Join 
+            - ''
+            - - !Ref 'AWS::StackName'
+              - AppHostedZone
+          Key: Name
+      Name: qacp.verifone.internal
+	  
+Command to copy file form Container:
+----------------------------------------	  
+docker cp mycontainer:/src/. target	  
+
+
+Nfs Createion:
+--------------------------------------
+apt-get install nsf-utli
+start nfs-server.service
+systemctl enable nfs-server.service
+systemctl start nfs-server.service
+chmod 755 /var/nfs
+vi /etc/exports
+exportfs -a
+
+
+Tags for NLB to work in Public Subnet:
+-----------------------------------------
+kubernetes.io/cluster/eu-dev-sso shared 
+kubernetes.io/role/elb 1 
+
+EJBCA Deployment:
+------------------------
+Our current published work: https://hub.docker.com/r/primekey/ejbca-ce
+
+Basic public example on microk8s: https://github.com/primekeydevs/containers/tree/master/deployment-examples/kubernetes/microk8s
+
+Spinnaker Deployment:
+-------------------------
+-------------------------
+
+http://devops.buzz/kubernetes-deploy-spinnaker-using-halyard-docker-image/
+
+
+EJBCA Deployment:
+-----------------------
+-----------------------
+
+Our current published work: https://hub.docker.com/r/primekey/ejbca-ce
+
+Basic public example on microk8s: https://github.com/primekeydevs/containers/tree/master/deployment-examples/kubernetes/microk8s
+
+docker pull library/mariadb:10.2
+
+
+===================
+Create a docker file/container from scratch:
+---------------------------------------------
+---------------------------------------------
+
+https://linuxhint.com/create_docker_image_from_scratch/ 
+
+Cluster Access from Single Instance:
+---------------------------------------
+---------------------------------------
+https://aws.amazon.com/premiumsupport/knowledge-center/amazon-eks-cluster-access/
+
+
+Link for CLuster AutoScalar:
+------------------------------
+------------------------------
+
+https://medium.com/@alejandro.millan.frias/cluster-autoscaler-in-amazon-eks-d9f787176519
+
+https://github.com/kubernetes/autoscaler/blob/vpa-release-0.3/vertical-pod-autoscaler/README.md
+
+https://github.com/kubernetes/community/blob/master/contributors/design-proposals/autoscaling/vertical-pod-autoscaler.md#architecture-overview
+
+https://github.com/kubernetes-incubator/metrics-server
+
+EJBCA, OCSP, WSO2, VPC Assosication - Route53 Links:
+-------------
+-------------
+https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zone-private-associate-vpcs-different-accounts.html
+
+https://hub.docker.com/r/primekey/ejbca-ce
+
+https://github.com/DilanUA/esb-container-prj/tree/master/k8s/volumes
+
+https://github.com/primekeydevs/containers/blob/master/deployment-examples/kubernetes/microk8s/ejbca-ce-with-ingress-and-mariadb.yaml
+
+https://github.com/primekeydevs/containers/tree/master/deployment-examples/kubernetes/microk8s
+
+https://download.primekey.com/docs/EJBCA-Enterprise/6_15_2/OCSP_Management.html
+
+https://github.com/wso2/kubernetes-is/blob/master/is/identity-server-deployment.yaml
+
+Code to setup Tripwire:
+-------------------------------
+-------------------------------
+
+service twdaemon status - service check command
+
+#! /bin/bash
+set -ex
+
+sudo mkdir -p /etc/sft/
+
+echo "Add a basic sftd configuration"
+sftcfg=$(cat <<EOF
+---
+#CanonicalName:            "DevCG-EKSAdmin"
+Bastion:                  "nonprodbastion"
+EOF
+)
+
+echo -e "$sftcfg" | sudo tee /etc/sft/sftd.yaml
+
+echo "eyJzIjoiMjQ2YjFmMjYtOTZhMS00MjQyLWE1NDYtODE2YjQ2Zjk4MjViIiwidSI6Imh0dHBzOi8vYXBwLnNjYWxlZnQuY29tIn0=" | sudo tee /var/lib/sftd/enrollment.token
+#!/bin/bash
+cd /root/te_agent_8.6.0.3_en_linux_amd64
+sudo ./te_agent.bin --eula accept --silent --server-host 10.177.122.13 --server-port 9898 --passphrase "7SIiqSs2Ux%LmMg&fLtN@z.6FJAT6Aq8"
+cd /usr/local/tripwire/te/agent/bin/
+sudo ./twdaemon start
+
+
+Command to create group and user:
+------------------------------------
+------------------------------------
+sudo groupadd --system -g 498 verifoneappuser
+sudo useradd --system -g 0 -u 80 verifoneappuser
+
+CFN For Hosted Zone Creatation:
+----------------------------------------
+----------------------------------------
+  AppHostedZone:
+    Type: 'AWS::Route53::HostedZone'
+    Properties:
+      VPCs:
+        - VPCId: !Ref Vpc
+          VPCRegion: !Ref 'AWS::Region'
+      HostedZoneConfig:
+        Comment: Created through cloudformation
+      HostedZoneTags:
+        - Value: !Join 
+            - ''
+            - - !Ref 'AWS::StackName'
+              - AppHostedZone
+          Key: Name
+      Name: qacp.verifone.internal
+	  
+Command to copy file form Container:
+----------------------------------------	  
+docker cp mycontainer:/src/. target	  
+
+
+Nfs Createion:
+--------------------------------------
+apt-get install nsf-utli
+start nfs-server.service
+systemctl enable nfs-server.service
+systemctl start nfs-server.service
+chmod 755 /var/nfs
+vi /etc/exports
+exportfs -a
+
+
+Tags for NLB to work in Public Subnet:
+-----------------------------------------
+kubernetes.io/cluster/eu-dev-sso shared 
+kubernetes.io/role/elb 1 
+
+EJBCA Deployment:
+------------------------
+Our current published work: https://hub.docker.com/r/primekey/ejbca-ce
+
+Basic public example on microk8s: https://github.com/primekeydevs/containers/tree/master/deployment-examples/kubernetes/microk8s
+
+Spinnaker Deployment:
+-------------------------
+-------------------------
+
+http://devops.buzz/kubernetes-deploy-spinnaker-using-halyard-docker-image/
+
+
+EJBCA Deployment:
+-----------------------
+-----------------------
+
+https://github.com/cockpit-project/cockpit - project cockpit
+
+Our current published work: https://hub.docker.com/r/primekey/ejbca-ce
+
+Basic public example on microk8s: https://github.com/primekeydevs/containers/tree/master/deployment-examples/kubernetes/microk8s
+EJBCA COnsole Link:  https://a6b7c395b613011e980b9062b2956a2d-0e8bd33037b81a9e.elb.eu-central-1.amazonaws.com/ejbca/adminweb/
+
+docker pull library/mariadb:10.2
+
+
+1000core is one CPU.
+	
+
+openssl s_client -servername dev.cgateway.verifone.com -connect dev.cgateway.verifone.com:443 2>/dev/null | openssl x509 -noout -dates
+
+SFT RDP connection:
+------------------------
+------------------------
+To start RDP in full screen mode need to use: - sft config rdp.fullscreen true
+Following are the details of test windows machines.
+â€¢	(Dev/QA)Test windows machine 2 -  sft rdp EC2AMAZ-FULS40H --via ip-10-177-120-154.eu-central-1.compute.internal
+â€¢	(Dev/QA)Test windows machine 1 -  sft rdp EC2AMAZ-PLNO1TB --via ip-10-177-120-154.eu-central-1.compute.internal
+â€¢	(Dev/QA)Test windows machine 3 -  sft rdp EC2AMAZ-3KF4THO --via ip-10-177-120-154.eu-central-1.compute.internal - 
+â€¢	(Staging)Test windows machine 1 -  sft rdp EC2AMAZ-6DIJ8IC --via nonprodbastion -
+â€¢	(Staging)Test windows machine 2 -  sft rdp EC2AMAZ-P0UO6EG --via nonprodbastion -
+â€¢	(Staging)Test windows machine 3 -  sft rdp EC2AMAZ-K9RK2GJ --via nonprodbastion -
+
+https://www.scaleft.com/docs/windows/
+
+https://docs.aws.amazon.com/eks/latest/userguide/cni-upgrades.html
+    
+.key file to .pem:
+------------------------------	
+openssl rsa -in account.verifonecp.com.key -text > private.pem
+
+Okta Login:
+-------------------------------
+https://microland-rahulsk.okta.com
+
+Splunk Implementation On EKS:
+--------------------------------
+Links: https://www.youtube.com/watch?v=_3QrIfBXpq0&list=PLhr1KZpdzukdc-jfSvpQYOO9nsOiCbVtX&index=4
+
+GitHub - https://github.com/splunk/splunk-connect-for-kubernetes
+ -> Amazon EKS config Example
+RubyGems - 
+ ->Logging - https://rubygems.org/gems/fluent-plugin-splunk-hec
+ -> Metadata/objects - https://rubygems.org/gems/fluent-plugin-kubernetes-objects
+Docker Hub
+ -> Loggin - https://hub.docker.com/r/splunk.fluentd-hec/
+ -> Metadata/objects - https://hub.docker.com/r/splunk/kube-objects/
+ 
+Kubernetes Dashboard:
+---------------------------
+https://github.com/kubernetes/dashboard
+https://aws.amazon.com/premiumsupport/knowledge-center/eks-cluster-kubernetes-dashboard/
+
+Confluence Page links:
+------------------------------
+https://confluence.verifone.com:8443/display/VFIC/Splunk+Universal+Forwarder+Installation+and+Configuration
+
+midtier:
+https://bitbucket.verifone.com:8443/projects/GCES/repos/cpmidtier/browse/devops/scripts
+
+
+https://bitbucket.verifone.com:8443/projects/GCES/repos/sso/browse/setup/docker/scripts 
+
+
+http://35.169.83.11/jobs/login?from=%2Fjobs%2Fview%2Fqacp%2F
+
+# /etc/yum.repos.d/nginx.repo
+[nginx]
+name=nginx repo
+baseurl=http://nginx.org/packages/mainline/centos/7/$basearch/
+gpgcheck=0
+enabled=1
+
+Jenkins:
+http://35.169.83.11/jobs/job/deploy-appcat-to-devcp/ http://35.169.83.11/jobs/job/deploy-appcat-to-devcp/ 
+http://107.23.156.147/jobs/job/database-run-scripts/ 
+
+https://hub.docker.com/r/repositoryjp/nginx-1.8.0/
+
+https://kubernetes.io/blog/2018/04/30/zero-downtime-deployment-kubernetes-jenkins/
+
+https://medium.com/m/global-identity?redirectUrl=https%3A%2F%2Fblog.powerupcloud.com%2Fautomate-blue-green-deployment-on-kubernetes-in-a-single-pipeline-part-x-3b2e598d778e
+
+https://www.ianlewis.org/en/bluegreen-deployments-kubernetes
+http://ask.xmodulo.com/change-default-java-version-linux.html
+
+================================================================
+
+https://docs.aws.amazon.com/eks/latest/userguide/cni-upgrades.html
+
+https://aws.amazon.com/premiumsupport/knowledge-center/private-hosted-zone-different-account/
+
+open chrome in inseacure mode:
+    
+"Chrome\Application\chrome.exe" --disable-web-security --user-data-dir="c:/chromedev"
+â€‹    
+"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --disable-web-security --user-data-dir="c:/chromedev"
+
+https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html
+https://docs.aws.amazon.com/eks/latest/userguide/platform-versions.html
+https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html
+
+========================================================================
+
+You can use following command to delete the POD forcefully:
+
+kubectl delete pod <PODNAME> --grace-period=0 --force --namespace <NAMESPACE>
+
+chage -m 0 -M 99999 -I -1 -E -1 username
+
+"Chrome\Application\chrome.exe" --disable-web-security --user-data-dir="c:/chromedev"
+
+sft ssh -L 6443:localhost:6443 DevSSO-EKSAdmin
+netstat -aultnp | grep 6443
+
+
+
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - nc -z localhost 9443
+          failureThreshold: 3
+          initialDelaySeconds: 240
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - nc -z localhost 9443
+          failureThreshold: 3
+          initialDelaySeconds: 240
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+		  
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20

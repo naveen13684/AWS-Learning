@@ -1,0 +1,41 @@
+How to import and export job from one jenkin serer to another jenkins.
+=======================================================================
+
+Ex: from CG jenkins to CP jenkins
+
+Import the job to xml 
+=====================
+java -jar jenkins-cli.jar -s http://10.177.112.16/jobs/ get-job database-run-scripts > database-run-scripts.xml
+
+copy all the required files using scp to destination server
+===========================================================
+scp -i /root/npcmn.pem /var/lib/jenkins/workspace/database-run-scripts/fluxboard-jobs/database-run-scripts-dev/database-run-scri
+pts-dev.groovy ec2-user@10.177.112.59:/tmp
+
+creae new job with the xml file in the new jenkins server
+=========================================================
+java -jar jenkins-cli.jar -s http://10.177.112.59/jobs create-job database-run-scripts < database-run-scripts.xml
+
+
+java -jar jenkins-cli.jar -s http://10.177.112.59/jobs create-job commit-batch-jobs-cg < commit-batch-jobs.xml
+
+---------------------------------------------------
+
+for i in `java -jar jenkins-cli.jar -s http://10.177.112.16/jobs/ list-jobs`
+do
+	java -jar jenkins-cli.jar -s http://10.177.112.16/jobs/ get-job $i > /root/cgjobs/$i.xml
+done	
+
+---------------------------------------------------
+
+for i in `ls -l |awk '{print $9}'|cut -d. -f1`
+do
+        java -jar /var/lib/jenkins/jenkins-cli.jar -s http://10.177.112.59/jobs create-job $i < $i.xml --username=admin --password=redhat123
+done
+
+
+
+
+how to check the jenkins version
+===============================
+java -jar jenkins-cli.jar -s http://10.177.112.59/jobs version

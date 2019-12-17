@@ -1,0 +1,99 @@
+EC2 Instance with
+=======================
+Image = ami-000cf6c26f3500035
+Instance type = t2.micro
+key = amazon-awskey-virginia1
+security group ID = sg-57ef2c21  [ aws-security ]
+VPC subnet ID = subnet-43b4e51e  [ vpc-25f9295e  172.31.32.0/20 ]
+
+
+C:\Users\nk020131> aws ec2 run-instances --image-id ami-000cf6c26f3500035 --count 1 --instance-type t2.micro 
+                  --key-name amazon-awskey-virginia1 --security-group-ids sg-57ef2c21 --subnet-id subnet-43b4e51e
+{
+    "Instances": [
+        {
+            "Monitoring": {
+                "State": "disabled"
+            },
+            "PublicDnsName": "",
+            "StateReason": {
+                "Message": "pending",
+                "Code": "pending"
+            },
+            "State": {
+                "Code": 0,
+                "Name": "pending"
+            },
+            "EbsOptimized": false,
+            "LaunchTime": "2018-11-14T14:25:40.000Z",
+            "PrivateIpAddress": "172.31.34.168",
+            "ProductCodes": [],
+            "VpcId": "vpc-25f9295e",
+            "StateTransitionReason": "",
+            "InstanceId": "i-0bd3f122c74350f31",
+            "ImageId": "ami-000cf6c26f3500035",
+            "PrivateDnsName": "ip-172-31-34-168.ec2.internal",
+            "KeyName": "amazon-awskey-virginia1",
+            "SecurityGroups": [
+                {
+                    "GroupName": "aws_security",
+                    "GroupId": "sg-57ef2c21"
+                }
+            ],
+            "ClientToken": "",
+            "SubnetId": "subnet-43b4e51e",
+            "InstanceType": "t2.micro",
+            "NetworkInterfaces": [
+                {
+                    "Status": "in-use",
+                    "MacAddress": "0e:83:eb:87:74:2e",
+                    "SourceDestCheck": true,
+                    "VpcId": "vpc-25f9295e",
+                    "Description": "",
+                    "NetworkInterfaceId": "eni-009e927aa96c87354",
+                    "PrivateIpAddresses": [
+                        {
+                            "PrivateDnsName": "ip-172-31-34-168.ec2.internal",
+                            "Primary": true,
+                            "PrivateIpAddress": "172.31.34.168"
+                        }
+                    ],
+                    "PrivateDnsName": "ip-172-31-34-168.ec2.internal",
+                    "Attachment": {
+                        "Status": "attaching",
+                        "DeviceIndex": 0,
+                        "DeleteOnTermination": true,
+                        "AttachmentId": "eni-attach-0ed9ebfd1ba42d1fc",
+                        "AttachTime": "2018-11-14T14:25:40.000Z"
+                    },
+                    "Groups": [
+                        {
+                            "GroupName": "aws_security",
+                            "GroupId": "sg-57ef2c21"
+                        }
+                    ],
+                    "Ipv6Addresses": [],
+                    "OwnerId": "872371792653",
+                    "SubnetId": "subnet-43b4e51e",
+                    "PrivateIpAddress": "172.31.34.168"
+                }
+            ],
+            "SourceDestCheck": true,
+            "Placement": {
+                "Tenancy": "default",
+                "GroupName": "",
+                "AvailabilityZone": "us-east-1a"
+            },
+            "Hypervisor": "xen",
+            "BlockDeviceMappings": [],
+            "Architecture": "x86_64",
+            "RootDeviceType": "ebs",
+            "RootDeviceName": "/dev/xvda",
+            "VirtualizationType": "hvm",
+            "AmiLaunchIndex": 0
+        }
+    ],
+    "ReservationId": "r-084ecc94272af285c",
+    "Groups": [],
+    "OwnerId": "872371792653"
+}

@@ -1,0 +1,14 @@
+Application Load Balancer
+--------------------------
+Allows containers to use dynamic host port mapping (multiple tasks allowed per container instance). 
+Multiple services can use the same listener port on a single load balancer with rule-based routing and paths.
+
+Network Load Balancer
+-------------------------
+A Network Load Balancer functions at the fourth layer of the Open Systems Interconnection (OSI) model. 
+After the load balancer receives a request, it selects a target from the target group for the 
+default rule using a flow hash routing algorithm.
+
+Classic Load Balancer
+------------------------
+Requires static host port mappings (only one task allowed per container instance); rule-based routing and paths are not supported.
