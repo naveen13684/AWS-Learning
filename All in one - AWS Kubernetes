@@ -422,7 +422,8 @@ dfimage IMAGE_ID > Dockerfile
 chaining age of user in linux
 ==============================
 for i in `cat user`
-chage -I -1 -m 0 -M 99999 -E -1 $i
+
+ $i
 done
 
 list duplicate versions of rpm
@@ -577,7 +578,20 @@ ACTION=$DB_ACTION
 
 with json
 -----------
-curl -X POST $1/build --user jenkins:hashpassword --data-urlencode json='{"parameter":[{"name":"IMAGE_ID","value":"'"${BUILD_NUMBER}"'"}]}'
+curl -X POST $1/build --user jenkins:hashpassword --data-urlencode json='{"parameter":[{"name":"IMAGE_ID","value":"'"${BUILD_NUMBER}"'"},{"name":"JOB_ID","value":"'"${JOB_ID}"'"}]}'
+
+{
+"parameter":[
+             {
+              "name":"IMAGE_ID",
+              "value":"'"${BUILD_NUMBER}"'"
+             },
+             {
+              "name":"BUID_ID",
+              "value":"'"${BUILD_ID}"'"
+             },
+            ]
+}
 =========================================================
 
 Classic Load Balancer health check and instance register and deregister
@@ -669,3 +683,70 @@ for i in `aws cloudformation list-stacks --region=$region --stack-status-filter 
 
 aws cloudformation list-stacks --region=$region --stack-status-filter "DELETE_COMPLETE" --query  'StackSummaries[*].[StackName]' --output=text|grep -i CloudWatchEC2
 ===============================================================================================================================================
+
+List all the users with user ID > 1000
+
+awk -F ':' '$3 > 1000' /etc/passwd
+
+	
+
+awk -F: '{if ($3 > 10) {print $1}}' /etc/passwd
+
+for i in `awk -F: '{if ($3 > 10) {print $1}}' /etc/passwd`; do echo -e "updated password poliy for $i"; chage -I -1 -m 0 -M 99999 -E -1 $i; done
+
+=====================================
+
+how to replace existing config map whiout deleting it
+
+kubectl create configmap integrator-custom-entitlemenmt-config --from-file pdp-config.xml -o yaml -n wso2 --dry-run | kubectl replace -f -
+kubectl create configmap integrator-custom-entitlemenmt-policy --from-file verifone-policy.xml -o yaml -n wso2 --dry-run | kubectl replace -f -
+
+==================================================================
+
+XARGS
+
+find . -maxdepth 1 -type f | sudo xargs -I {} mv {} /etc/apache2/sites-available/
+sudo find . -maxdepth 1 -type f -exec mv {} /etc/apache2/sites-available \;
+find . -whatever-flags-go-here -print0 | xargs -r0 mv -t target-directory
+ls |grep -i .xml|sudo xargs -I {} cp -rp {}  ~/cgei-upload-config/devcg/confs
+==================================================================
+
+how to update codecommit repo name using aws cli
+
+aws codecommit list-repositories
+
+aws codecommit update-repository-name --old-name <value> --new-name <value>
+
+aws codecommit update-repository-name --old-name verifone-dev-nginxesb --new-name cg-efs
+
+============================================================
+
+zip folder excluding sub folders
+
+sudo zip -r wso2ei_10.zip wso2ei -x wso2ei/logs\* -x wso2ei/splunk\*
+
+===================================================================
+
+links:
+
+1) Appd Configure Multiple Standalone Machine Agents for One Machine
+
+https://docs.appdynamics.com/display/PRO41/Configure+Multiple+Standalone+Machine+Agents+for+One+Machine
+
+2) IAM and Kubernetes RBAC
+https://aws.amazon.com/blogs/opensource/introducing-fine-grained-iam-roles-service-accounts/
+
+3)A visual guide on troubleshooting Kubernetes deployments
+https://learnk8s.io/troubleshooting-deployments
+
+4)Automate IIS and HttpErr Logs to Amazon CloudWatch Using EC2 Systems Manager
+https://aws.amazon.com/blogs/mt/automate-iis-and-httperr-logs-to-amazon-cloudwatch-using-ec2-systems-manager/
+
+5) https://www.tecmint.com/enable-nginx-status-page/
+
+6) DNS names with proxy in aws outbout filtering
+
+https://aws.amazon.com/blogs/security/how-to-set-up-an-outbound-vpc-proxy-with-domain-whitelisting-and-content-filtering/
+
+7) S3 full ACL control
+https://labs.detectify.com/2017/07/13/a-deep-dive-into-aws-s3-access-controls-taking-full-control-over-your-assets/
