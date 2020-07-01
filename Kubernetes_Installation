@@ -1,0 +1,750 @@
+Download CentOS from osboxes.
+
+https://www.osboxes.org/centos/
+username - osboxes.org
+password - osboxes.org
+
+import image in workstation
+create one master and two worker nodes from above image
+Master : 4GB RAM / 2 cpu
+Worker : 2GB RAM / 1 cpu
+
+Prerequisites:
+==============
+
+1)Configure docker and Kubernetes Repository
+============================================
+Docker: Docker requires container-selinux and containerd main rpm packages CentOS auto pulls but 
+RHEL you need to manuall find specific version and install if you have subscription then you need add repo using yum subscription.
+
+cat <<EOF > /etc/yum.repos.d/docker-ce.repo
+[docker-ce-stable]
+name=Docker CE Stable - $basearch
+baseurl=https://download.docker.com/linux/centos/7/x86_64/stable/
+enabled=1
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
+EOF
+
+Kubernetes:
+
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+
+
+2)Install kubelet, kubeadm, and kubectl and docker
+=====================================
+yum install -y kubelet kubeadm kubectl
+
+systemctl enable kubelet
+systemctl start kubelet
+
+yum install -y docker-ce
+
+systemctl enable docker
+systemctl start docker
+
+
+Set Hostname on Nodes
+====================
+hostnamectl set-hostname kube-master
+hostnamectl set-hostname kube-node1
+hostnamectl set-hostname kube-node2
+
+vi /etc/hosts
+192.168.0.110 master kube-master
+192.168.0.120 worker1 kube-worker1
+192.168.0.121 worker1 kube-worker2
+
+
+3)Configure Firewall
+==================
+Master
+
+sudo firewall-cmd --permanent --add-port=6443/tcp
+sudo firewall-cmd --permanent --add-port=2379-2380/tcp
+sudo firewall-cmd --permanent --add-port=10250/tcp
+sudo firewall-cmd --permanent --add-port=10251/tcp
+sudo firewall-cmd --permanent --add-port=10252/tcp
+sudo firewall-cmd --permanent --add-port=10255/tcp
+sudo firewall-cmd --reload
+
+Worker
+
+sudo firewall-cmd --permanent --add-port=10251/tcp
+sudo firewall-cmd --permanent --add-port=10255/tcp
+firewall-cmd --reload
+
+4)Update Iptables Settings
+========================
+Set the net.bridge.bridge-nf-call-iptables to ‘1’ in your sysctl config file. 
+This ensures that packets are properly processed by IP tables during filtering and port forwarding.
+
+cat  <<EOF /etc/sysctl.d/99-sysctl.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+
+sysctl --system	
+
+5)Disable swap
+================
+sudo sed -i '/swap/d' /etc/fstab
+sudo swapoff -a	
+
+The reason why we disable swap is first kubelet service will work properly , second scheduler will not use swap which will
+slow down the pod creation
+
+
+
+6)Disable SELinux
+
+sudo setenforce 0
+sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+
+
+How to Deploy a Kubernetes Cluster:
+==================================
+
+Create Cluster with kubeadm
+kubeadm init --pod-network-cidr=10.244.0.0/16
+
+Sample Output of kubeadm init:
+==============================
+
+[root@kube-master ~]# kubeadm init --pod-network-cidr=10.244.0.0/16
+W0525 08:04:29.668193    9728 configset.go:202] WARNING: kubeadm cannot validate component configs for API groups [kubelet.config.k8s.io kubeproxy.config.k8s.io]
+[init] Using Kubernetes version: v1.18.3
+[preflight] Running pre-flight checks
+        [WARNING Firewalld]: firewalld is active, please ensure ports [6443 10250] are open or your cluster may not function correctly
+        [WARNING IsDockerSystemdCheck]: detected "cgroupfs" as the Docker cgroup driver. The recommended driver is "systemd". Please follow the guide at https://kubernetes.io/docs/setup/cri/
+        [WARNING Hostname]: hostname "kube-master" could not be reached
+        [WARNING Hostname]: hostname "kube-master": lookup kube-master on 192.168.0.1:53: no such host
+[preflight] Pulling images required for setting up a Kubernetes cluster
+[preflight] This might take a minute or two, depending on the speed of your internet connection
+[preflight] You can also perform this action in beforehand using 'kubeadm config images pull'
+[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Starting the kubelet
+[certs] Using certificateDir folder "/etc/kubernetes/pki"
+[certs] Generating "ca" certificate and key
+[certs] Generating "apiserver" certificate and key
+[certs] apiserver serving cert is signed for DNS names [kube-master kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local] and IPs [10.96.0.1 192.168.0.110]
+[certs] Generating "apiserver-kubelet-client" certificate and key
+[certs] Generating "front-proxy-ca" certificate and key
+[certs] Generating "front-proxy-client" certificate and key
+[certs] Generating "etcd/ca" certificate and key
+[certs] Generating "etcd/server" certificate and key
+[certs] etcd/server serving cert is signed for DNS names [kube-master localhost] and IPs [192.168.0.110 127.0.0.1 ::1]
+[certs] Generating "etcd/peer" certificate and key
+[certs] etcd/peer serving cert is signed for DNS names [kube-master localhost] and IPs [192.168.0.110 127.0.0.1 ::1]
+[certs] Generating "etcd/healthcheck-client" certificate and key
+[certs] Generating "apiserver-etcd-client" certificate and key
+[certs] Generating "sa" key and public key
+[kubeconfig] Using kubeconfig folder "/etc/kubernetes"
+[kubeconfig] Writing "admin.conf" kubeconfig file
+[kubeconfig] Writing "kubelet.conf" kubeconfig file
+[kubeconfig] Writing "controller-manager.conf" kubeconfig file
+[kubeconfig] Writing "scheduler.conf" kubeconfig file
+[control-plane] Using manifest folder "/etc/kubernetes/manifests"
+[control-plane] Creating static Pod manifest for "kube-apiserver"
+[control-plane] Creating static Pod manifest for "kube-controller-manager"
+W0525 08:05:45.863328    9728 manifests.go:225] the default kube-apiserver authorization-mode is "Node,RBAC"; using "Node,RBAC"
+[control-plane] Creating static Pod manifest for "kube-scheduler"
+W0525 08:05:45.865157    9728 manifests.go:225] the default kube-apiserver authorization-mode is "Node,RBAC"; using "Node,RBAC"
+[etcd] Creating static Pod manifest for local etcd in "/etc/kubernetes/manifests"
+[wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests". This can take up to 4m0s
+[apiclient] All control plane components are healthy after 32.505365 seconds
+[upload-config] Storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
+[kubelet] Creating a ConfigMap "kubelet-config-1.18" in namespace kube-system with the configuration for the kubelets in the cluster
+[upload-certs] Skipping phase. Please see --upload-certs
+[mark-control-plane] Marking the node kube-master as control-plane by adding the label "node-role.kubernetes.io/master=''"
+[mark-control-plane] Marking the node kube-master as control-plane by adding the taints [node-role.kubernetes.io/master:NoSchedule]
+[bootstrap-token] Using token: 05epoa.qh57om9p6b2mhszw
+[bootstrap-token] Configuring bootstrap tokens, cluster-info ConfigMap, RBAC Roles
+[bootstrap-token] configured RBAC rules to allow Node Bootstrap tokens to get nodes
+[bootstrap-token] configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+[bootstrap-token] configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
+[bootstrap-token] configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+[bootstrap-token] Creating the "cluster-info" ConfigMap in the "kube-public" namespace
+[kubelet-finalize] Updating "/etc/kubernetes/kubelet.conf" to point to a rotatable kubelet client certificate and key
+[addons] Applied essential addon: CoreDNS
+[addons] Applied essential addon: kube-proxy
+
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 192.168.0.110:6443 --token 05epoa.qh57om9p6b2mhszw \
+    --discovery-token-ca-cert-hash sha256:f8ade1ddc08094484ffa8742af9b3aee85b365eead264512eeca215e50201d3f
+[root@kube-master ~]#
+
+
+Run below commands on Master
+============================
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Setup Pod Network - run below on Master Node
+=================================================
+A Pod Network allows nodes within the cluster to communicate. Lets use flannel.
+
+[root@kube-master ~]# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+podsecuritypolicy.policy/psp.flannel.unprivileged created
+clusterrole.rbac.authorization.k8s.io/flannel created
+clusterrolebinding.rbac.authorization.k8s.io/flannel created
+serviceaccount/flannel created
+configmap/kube-flannel-cfg created
+daemonset.apps/kube-flannel-ds-amd64 created
+daemonset.apps/kube-flannel-ds-arm64 created
+daemonset.apps/kube-flannel-ds-arm created
+daemonset.apps/kube-flannel-ds-ppc64le created
+daemonset.apps/kube-flannel-ds-s390x created
+[root@kube-master ~]#
+
+
+Join Worker Nodes to Cluster
+=============================
+Kube-worker1
+============
+[root@kube-worker1 ~]# kubeadm join 192.168.0.110:6443 --token 05epoa.qh57om9p6b2mhszw \
+>     --discovery-token-ca-cert-hash sha256:f8ade1ddc08094484ffa8742af9b3aee85b365eead264512eeca215e50201d3f
+W0525 08:47:57.953165    2293 join.go:346] [preflight] WARNING: JoinControlPane.controlPlane settings will be ignored when control-plane flag is not set.
+[preflight] Running pre-flight checks
+        [WARNING IsDockerSystemdCheck]: detected "cgroupfs" as the Docker cgroup driver. The recommended driver is "systemd". Please follow the guide at https://kubernetes.io/docs/setup/cri/
+        [WARNING Hostname]: hostname "kube-node1" could not be reached
+        [WARNING Hostname]: hostname "kube-node1": lookup kube-node1 on 192.168.0.1:53: no such host
+[preflight] Reading configuration from the cluster...
+[preflight] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -oyaml'
+[kubelet-start] Downloading configuration for the kubelet from the "kubelet-config-1.18" ConfigMap in the kube-system namespace
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet-start] Starting the kubelet
+[kubelet-start] Waiting for the kubelet to perform the TLS Bootstrap...
+
+This node has joined the cluster:
+* Certificate signing request was sent to apiserver and a response was received.
+* The Kubelet was informed of the new secure connection details.
+
+Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
+
+[root@localhost ~]#
+
+
+kube-worker2
+==============
+[root@kube-worker2 ~]# kubeadm join 192.168.0.110:6443 --token 05epoa.qh57om9p6b2mhszw \
+>     --discovery-token-ca-cert-hash sha256:f8ade1ddc08094484ffa8742af9b3aee85b365eead264512eeca215e50201d3f
+W0525 08:48:03.288327    2268 join.go:346] [preflight] WARNING: JoinControlPane.controlPlane settings will be ignored when control-plane flag is not set.
+[preflight] Running pre-flight checks
+        [WARNING IsDockerSystemdCheck]: detected "cgroupfs" as the Docker cgroup driver. The recommended driver is "systemd". Please follow the guide at https://kubernetes.io/docs/setup/cri/
+        [WARNING Hostname]: hostname "kube-node2" could not be reached
+        [WARNING Hostname]: hostname "kube-node2": lookup kube-node2 on 192.168.0.1:53: no such host
+[preflight] Reading configuration from the cluster...
+[preflight] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -oyaml'
+[kubelet-start] Downloading configuration for the kubelet from the "kubelet-config-1.18" ConfigMap in the kube-system namespace
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet-start] Starting the kubelet
+[kubelet-start] Waiting for the kubelet to perform the TLS Bootstrap...
+
+This node has joined the cluster:
+* Certificate signing request was sent to apiserver and a response was received.
+* The Kubelet was informed of the new secure connection details.
+
+Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
+
+[root@localhost ~]#
+
+
+Check the Status on Master Node
+===============================
+[root@kube-master ~]# kubectl get nodes
+NAME          STATUS     ROLES    AGE   VERSION
+kube-master   Ready      master   41m   v1.18.3
+kube-node1    NotReady   <none>   8s    v1.18.3
+kube-node2    NotReady   <none>   2s    v1.18.3
+[root@kube-master ~]# kubectl get nodes
+NAME          STATUS   ROLES    AGE     VERSION
+kube-master   Ready    master   44m     v1.18.3
+kube-node1    Ready    <none>   2m34s   v1.18.3
+kube-node2    Ready    <none>   2m28s   v1.18.3
+[root@kube-master ~]#
+
+=======================================================================================================================================
+Troubleshooting
+===============
+1) coredns pods not coming up
+
+[root@kube-master ~]# kubectl get po --all-namespaces -o wide
+NAMESPACE     NAME                                  READY   STATUS              RESTARTS   AGE     IP              NODE          NOMINATED NODE   READINESS GATES
+kube-system   coredns-66bff467f8-4857t              0/1     ContainerCreating   0          6m51s   <none>          kube-node2    <none>           <none>
+kube-system   coredns-66bff467f8-vlshg              0/1     ContainerCreating   0          10d     <none>          kube-node1    <none>           <none>
+
+[root@kube-master ~]# systemctl status kubelet -l
+● kubelet.service - kubelet: The Kubernetes Node Agent
+   Loaded: loaded (/usr/lib/systemd/system/kubelet.service; enabled; vendor preset: disabled)
+  Drop-In: /usr/lib/systemd/system/kubelet.service.d
+           └─10-kubeadm.conf
+   Active: active (running) since Thu 2020-06-04 08:19:38 EDT; 1min 5s ago
+     Docs: https://kubernetes.io/docs/
+ Main PID: 654 (kubelet)
+    Tasks: 16
+   Memory: 99.8M
+   CGroup: /system.slice/kubelet.service
+           └─654 /usr/bin/kubelet --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf --config=/var/lib/kubelet/config.yaml --cgroup-driver=cgroupfs --network-plugin=cni --pod-infra-container-image=k8s.gcr.io/pause:3.2
+
+Jun 04 08:20:24 kube-master kubelet[654]: W0604 08:20:24.635052     654 cni.go:237] Unable to update cni config: no networks found in /etc/cni/net.d
+Jun 04 08:20:27 kube-master kubelet[654]: E0604 08:20:27.089546     654 kubelet.go:2187] Container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:docker: network plugin is not ready: cni config uninitialized
+Jun 04 08:20:29 kube-master kubelet[654]: W0604 08:20:29.640700     654 cni.go:237] Unable to update cni config: no networks found in /etc/cni/net.d
+Jun 04 08:20:32 kube-master kubelet[654]: E0604 08:20:32.127079     654 summary_sys_containers.go:47] Failed to get system container stats for "/system.slice/docker.service": failed to get cgroup stats for "/system.slice/docker.service": failed to get container info for "/system.slice/docker.service": unknown container "/system.slice/docker.service"
+Jun 04 08:20:32 kube-master kubelet[654]: E0604 08:20:32.157643     654 kubelet.go:2187] Container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:docker: network plugin is not ready: cni config uninitialized
+Jun 04 08:20:34 kube-master kubelet[654]: W0604 08:20:34.641216     654 cni.go:237] Unable to update cni config: no networks found in /etc/cni/net.d
+Jun 04 08:20:37 kube-master kubelet[654]: E0604 08:20:37.173217     654 kubelet.go:2187] Container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:docker: network plugin is not ready: cni config uninitialized
+Jun 04 08:20:39 kube-master kubelet[654]: W0604 08:20:39.641859     654 cni.go:237] Unable to update cni config: no networks found in /etc/cni/net.d
+Jun 04 08:20:42 kube-master kubelet[654]: E0604 08:20:42.173522     654 summary_sys_containers.go:47] Failed to get system container stats for "/system.slice/docker.service": failed to get cgroup stats for "/system.slice/docker.service": failed to get container info for "/system.slice/docker.service": unknown container "/system.slice/docker.service"
+Jun 04 08:20:42 kube-master kubelet[654]: E0604 08:20:42.189404     654 kubelet.go:2187] Container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:docker: network plugin is not ready: cni config uninitialized
+
+describe PO of coredns pod
+===========================
+  Warning  FailedCreatePodSandBox  81s (x4 over 88s)    kubelet, kube-node2  (combined from similar events): Failed to create pod sandbox: 
+  rpc error: code = Unknown desc = failed to set up sandbox container "4d101ca028f6556c498acbe3ab0f6b158d1773137a7b7a17c7bd97a26fae932b" 
+  network for pod "coredns-66bff467f8-kvqwl": networkPlugin cni failed to set up pod "coredns-66bff467f8-kvqwl_kube-system" network: 
+  open /run/flannel/subnet.env: no such file or directory
+  
+Fix:
+
+[root@kube-master ~]# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+podsecuritypolicy.policy/psp.flannel.unprivileged created
+clusterrole.rbac.authorization.k8s.io/flannel created
+clusterrolebinding.rbac.authorization.k8s.io/flannel created
+serviceaccount/flannel created
+configmap/kube-flannel-cfg created
+daemonset.apps/kube-flannel-ds-amd64 created
+daemonset.apps/kube-flannel-ds-arm64 created
+daemonset.apps/kube-flannel-ds-arm created
+daemonset.apps/kube-flannel-ds-ppc64le created
+daemonset.apps/kube-flannel-ds-s390x created
+[root@kube-master ~]# kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+podsecuritypolicy.policy/psp.flannel.unprivileged configured
+clusterrole.rbac.authorization.k8s.io/flannel unchanged
+clusterrolebinding.rbac.authorization.k8s.io/flannel unchanged
+serviceaccount/flannel unchanged
+configmap/kube-flannel-cfg unchanged
+daemonset.apps/kube-flannel-ds-amd64 unchanged
+daemonset.apps/kube-flannel-ds-arm64 unchanged
+daemonset.apps/kube-flannel-ds-arm unchanged
+daemonset.apps/kube-flannel-ds-ppc64le unchanged
+daemonset.apps/kube-flannel-ds-s390x unchanged
+[root@kube-master ~]# kubectl get nodes
+NAME          STATUS     ROLES    AGE   VERSION
+kube-master   NotReady   master   10d   v1.18.3
+kube-node1    Ready      <none>   28m   v1.18.3
+kube-node2    Ready      <none>   18m   v1.18.3
+[root@kube-master ~]# kubectl get po --all-namespaces
+NAMESPACE     NAME                                  READY   STATUS              RESTARTS   AGE
+kube-system   coredns-66bff467f8-kvqwl              0/1     Running             0          8m34s
+kube-system   coredns-66bff467f8-vhvgh              0/1     ContainerCreating   0          8m34s
+kube-system   etcd-kube-master                      1/1     Running             2          10d
+kube-system   kube-apiserver-kube-master            1/1     Running             2          10d
+kube-system   kube-controller-manager-kube-master   1/1     Running             2          10d
+kube-system   kube-flannel-ds-amd64-7858z           1/1     Running             0          21s
+kube-system   kube-flannel-ds-amd64-b96sn           1/1     Running             0          21s
+kube-system   kube-flannel-ds-amd64-t86mc           1/1     Running             0          21s
+kube-system   kube-proxy-dfh4b                      1/1     Running             2          10d
+kube-system   kube-proxy-nzznr                      1/1     Running             1          28m
+kube-system   kube-proxy-qmwp4                      1/1     Running             1          18m
+kube-system   kube-scheduler-kube-master            1/1     Running             2          10d
+[root@kube-master ~]# kubectl get nodes
+NAME          STATUS   ROLES    AGE   VERSION=
+kube-master   Ready    master   10d   v1.18.3
+kube-node1    Ready    <none>   30m   v1.18.3
+kube-node2    Ready    <none>   19m   v1.18.3
+[root@kube-master ~]#
+=======================================================================================================================================
+1)CoreDNS pod logs shows below readynessprobe error.
+
+  Normal   SandboxChanged          26m (x172 over 31m)    kubelet, kube-node2  Pod sandbox changed, it will be killed and re-created.
+  Warning  Unhealthy               6m46s (x102 over 23m)  kubelet, kube-node2  Readiness probe failed: HTTP probe failed with statuscode: 503
+
+[root@kube-master ~]# for p in $(kubectl get pods --namespace=kube-system -l k8s-app=kube-dns -o name); do kubectl logs --namespace=kube-system $p; done
+
+
+Trace[195071563]: [30.001266741s] [30.001266741s] END
+E0604 12:49:24.176280       1 reflector.go:153] pkg/mod/k8s.io/client-go@v0.17.2/tools/cache/reflector.go:105: Failed to list *v1.Endpoints: Get https://10.96.0.1:443/api/v1/endpoints?limit=500&resourceVersion=0: dial tcp 10.96.0.1:443: i/o timeout
+[INFO] plugin/ready: Still waiting on: "kubernetes"
+I0604 12:49:30.161306       1 trace.go:116] Trace[1059014376]: "Reflector ListAndWatch" name:pkg/mod/k8s.io/client-go@v0.17.2/tools/cache/reflector.go:105 (started: 2020-06-04 12:49:00.160683616 +0000 UTC m=+1065.685824125) (total time: 30.000591362s):
+Trace[1059014376]: [30.000591362s] [30.000591362s] END
+E0604 12:49:30.161327       1 reflector.go:153] pkg/mod/k8s.io/client-go@v0.17.2/tools/cache/reflector.go:105: Failed to list *v1.Service: Get https://10.96.0.1:443/api/v1/services?limit=500&resourceVersion=0: dial tcp 10.96.0.1:443: i/o timeout
+
+
+Fix:
+Firewalld service was enabled on the servers. Disable it.
+
+[root@kube-node2 ~]# systemctl stop firewalld
+[root@kube-node2 ~]# systemctl disable firewalld
+
+
+[root@kube-master ~]# kubectl delete po coredns-66bff467f8-kvqwl coredns-66bff467f8-vhvgh --force --grace-period=0 -n kube-system
+warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.
+pod "coredns-66bff467f8-kvqwl" force deleted
+pod "coredns-66bff467f8-vhvgh" force deleted
+[root@kube-master ~]#
+
+[root@kube-master ~]# kubectl describe po coredns-66bff467f8-twft9 -n kube-system
+Events:
+  Type    Reason     Age   From                 Message
+  ----    ------     ----  ----                 -------
+  Normal  Scheduled  66s   default-scheduler    Successfully assigned kube-system/coredns-66bff467f8-twft9 to kube-node1
+  Normal  Pulling    65s   kubelet, kube-node1  Pulling image "k8s.gcr.io/coredns:1.6.7"
+  Normal  Pulled     60s   kubelet, kube-node1  Successfully pulled image "k8s.gcr.io/coredns:1.6.7"
+  Normal  Created    59s   kubelet, kube-node1  Created container coredns
+  Normal  Started    59s   kubelet, kube-node1  Started container coredns
+[root@kube-master ~]#
+
+
+[root@kube-master ~]# for p in $(kubectl get pods --namespace=kube-system -l k8s-app=kube-dns -o name); do kubectl logs --namespace=kube-system $p; done
+.:53
+[INFO] plugin/reload: Running configuration MD5 = 4e235fcc3696966e76816bcd9034ebc7
+CoreDNS-1.6.7
+linux/amd64, go1.13.6, da7f65b
+.:53
+[INFO] plugin/reload: Running configuration MD5 = 4e235fcc3696966e76816bcd9034ebc7
+CoreDNS-1.6.7
+linux/amd64, go1.13.6, da7f65b
+[root@kube-master ~]#
+
+=========================
+SAMPLE NGINX-DEPLOYMENT
+=========================
+
+1) Create a deployment
+
+kubectl create deploy nginx --image=bitnami/nginx
+
+2) expose deployment to service as nodeport
+
+kubectl create service nodeport nginx --tcp=8080:8080
+
+3) Findout on which node pod is running and node port details
+[root@kube-master ~]# kubectl get po -o wide
+NAME                     READY   STATUS    RESTARTS   AGE     IP           NODE         NOMINATED NODE   READINESS GATES
+nginx-68b96b4768-vwmh7   1/1     Running   0          3m56s   10.244.2.5   kube-node2   <none>           <none>
+[root@kube-master ~]#
+
+[root@kube-master ~]#  kubectl get svc
+NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP          10d
+nginx        NodePort    10.104.103.85   <none>        8080:30387/TCP   2m34s
+[root@kube-master ~]#
+
+
+4) Test if you can curl
+curl http://192.168.0.121:30387
+==========================================================================================================================================================================================================
+DOCKER
+=====================================================================================================
+check if Nginx working
+========================
+
+METHOD:1
+=============
+1) Find out internal network IP of docker.
+
+[root@docker ~]# docker inspect --format '{{ .NetworkSettings.IPAddress }}' '<containerID>'
+172.17.0.2
+
+2) Locate port . IN this case it is 8080
+[root@docker ~]# docker ps -a
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                NAMES
+33c9cd474ac6        bitnami/nginx       "/opt/bitnami/script…"   12 seconds ago      Up 11 seconds       8080/tcp, 8443/tcp   nginx
+[root@docker ~]#
+
+3) curl and check if URL working inside node. NOTE: you still cannot access it from outside the node.
+
+[root@docker ~]# curl http://172.17.0.2:8080
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+[root@docker ~]#
+
+METHOD:2
+========
+1) set your --network=host when you docker run or docker container create. In this case, your docker will use the same network interface you use in
+
+[root@docker ~]# docker run --network=host -p:8081:8080 --name nginx -d bitnami/nginx
+WARNING: Published ports are discarded when using host network mode
+9b80540ecf724aab799f60587be8282db134581683af437b8438ef72c1826725
+[root@docker ~]# 
+
+2)Directly access the network 
+curl http://192.168.0.130:8080/
+
+=============================================================================================================================
+
+[root@docker ~]# ip addr show docker0 | grep -Po 'inet \K[\d.]+'
+172.17.0.1
+[root@docker ~]# ip addr show docker0
+3: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default
+    link/ether 02:42:fc:cd:47:24 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::42:fcff:fecd:4724/64 scope link
+       valid_lft forever preferred_lft forever
+[root@docker ~]#
+
+
+[root@docker ~]# ip route show
+default via 192.168.0.1 dev enp0s3 proto dhcp metric 100
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1
+192.168.0.0/24 dev enp0s3 proto kernel scope link src 192.168.0.130 metric 100
+192.168.0.0/24 dev enp0s3 proto kernel scope link src 192.168.0.114 metric 100
+[root@docker ~]#
+
+[root@docker ~]# hostip=$(ip route show | awk '/default/ {print $3}')
+[root@docker ~]# echo $hostip
+192.168.0.1
+[root@docker ~]#
+
+
+Voume mount
+===========
+docker run -v /var/run/postgresql:/var/run/postgresql
+
+
+
+=====================================================================================================
+Docker Network
+=============
+
+[root@docker ~]#  docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+0cdea88f82d5        bridge              bridge              local
+d0cf337938ef        host                host                local
+ab463f432735        none                null                local
+[root@docker ~]# docker network inspect bridge
+[
+    {
+        "Name": "bridge",
+        "Id": "0cdea88f82d553b3e98d09910a10d8b1c6869efcf9fe1b20f686635086dcbb94",
+        "Created": "2020-06-04T09:40:24.667797192-04:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": null,
+            "Config": [
+                {
+                    "Subnet": "172.17.0.0/16",
+                    "Gateway": "172.17.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {
+            "com.docker.network.bridge.default_bridge": "true",
+            "com.docker.network.bridge.enable_icc": "true",
+            "com.docker.network.bridge.enable_ip_masquerade": "true",
+            "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
+            "com.docker.network.bridge.name": "docker0",
+            "com.docker.network.driver.mtu": "1500"
+        },
+        "Labels": {}
+    }
+]
+[root@docker ~]#
+
+
+[root@docker ~]# docker network create --driver bridge naveen
+30013930f915576bffa8c78dde0f403ea7c86988081c2cdc39f6304171ecfc5c
+[root@docker ~]#
+
+[root@docker ~]# docker network inspect naveen
+[
+    {
+        "Name": "naveen",
+        "Id": "30013930f915576bffa8c78dde0f403ea7c86988081c2cdc39f6304171ecfc5c",
+        "Created": "2020-06-04T12:49:21.694625025-04:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "172.18.0.0/16",
+                    "Gateway": "172.18.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {},
+        "Labels": {}
+    }
+]
+[root@docker ~]#
+
+
+If you want to create specific network with specific subnet and default gateway
+
+docker network create --driver=bridge --subnet=192.168.2.0/24 --gateway=192.168.2.10 new_subnet
+
+[root@docker ~]# docker network inspect new_subnet
+[
+    {
+        "Name": "new_subnet",
+        "Id": "5bbdd18d50b5687a553ff786c9795e7d9540487b21d7487a036ec7aacdc057d5",
+        "Created": "2020-06-04T12:51:38.933866548-04:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "192.168.2.0/24",
+                    "Gateway": "192.168.2.10"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {},
+        "Labels": {}
+    }
+]
+[root@docker ~]#
+
+Attaching a container to a networking
+
+docker run --network=naveen -itd --name=docker-nginx nginx
+
+
+[root@docker ~]# docker network inspect naveen
+[
+    {
+        "Name": "naveen",
+        "Id": "30013930f915576bffa8c78dde0f403ea7c86988081c2cdc39f6304171ecfc5c",
+        "Created": "2020-06-04T12:49:21.694625025-04:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "172.18.0.0/16",
+                    "Gateway": "172.18.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {
+            "9b04cd7e19bac09b4bb20355b17de3e12ecb9dcea31e45c23b6671b9319a347d": {
+                "Name": "docker-nginx",
+                "EndpointID": "3268a2ee826a6a3871dfceff27a0d6847d40fcef611fedb014c113d085e7b983",
+                "MacAddress": "02:42:ac:12:00:02",
+                "IPv4Address": "172.18.0.2/16",
+                "IPv6Address": ""
+            }
+        },
+        "Options": {},
+        "Labels": {}
+    }
+]
+=======================================================================================
+mapping HOSTPORT:DOCKERPORT
+
+[root@docker ~]# docker run --network=naveen -itd -P --name=docker-nginx1 nginx
+9d997a400a411ed112390801d8d0e652925c2d7fa0ca3c3b1709027307341e2a
+[root@docker ~]# docker ps -a
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                   NAMES
+9d997a400a41        nginx               "/docker-entrypoint.…"   4 seconds ago       Up 4 seconds        0.0.0.0:32768->80/tcp   docker-nginx1
+9b04cd7e19ba        nginx               "/docker-entrypoint.…"   5 minutes ago       Up 4 minutes        80/tcp                  docker-nginx
+9b80540ecf72        bitnami/nginx       "/opt/bitnami/script…"   2 hours ago         Up 2 hours                                  nginx
+[root@docker ~]# 
+
+curl localhost:32768
+
+
+[root@docker ~]# docker run --network=naveen -itd -p 32769:80 --name=docker-nginx2 nginx
+850074308b1094c046f1e7912031eb077e1a7ee134491e9676b0e3fa47c55288
+[root@docker ~]# docker ps -a
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                   NAMES
+850074308b10        nginx               "/docker-entrypoint.…"   4 seconds ago       Up 3 seconds        0.0.0.0:32769->80/tcp   docker-nginx2
+9d997a400a41        nginx               "/docker-entrypoint.…"   2 minutes ago       Up 2 minutes        0.0.0.0:32768->80/tcp   docker-nginx1
+9b04cd7e19ba        nginx               "/docker-entrypoint.…"   7 minutes ago       Up 7 minutes        80/tcp                  docker-nginx
+9b80540ecf72        bitnami/nginx       "/opt/bitnami/script…"   2 hours ago         Up 2 hours                                  nginx
+[root@docker ~]#
+
+curl localhost:32769
