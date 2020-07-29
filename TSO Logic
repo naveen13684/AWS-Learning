@@ -1,0 +1,44 @@
+TSO Logic
+
+1) Does Analysis of Data points on premisis environment and Maches those servers
+to optimal right sized Ec2 instances in AWS
+
+2) Agentless TSO collector or import the data from inventory tools
+
+Exixting Monitoirng and inventory tools 
+
+VmWare - VCenter API - read only credentials
+Physical Devices - protocls  WMI or SNMP
+
+3) Applications , Lines of Business, LOB-Databases, Departents, Environments
+Migration Waves, SLA, Managers, Operating Systems , Virtualization, Bare-Metal
+Models, Locations
+
+Total cost
+Storage cost
+OS instance classification
+Storage usage
+Cost Modeler  - OS Current Provisioning , In use, In Zombie, Avg CPU, Peak CPU,  CPU, Avg Memory, Peak Memory, Memory, Assigned, On, OS, Cost
+
+Insdustry standard TSo logic basemark to cost modeling
+Direct Match - Lift and Shift
+
+
+
+
+4) Zombies bucket - no utilization , so no need to move to AWS
+
+5)Cost Modeling
+sql license 
+
+Direct Match - Lift and shift
+TSO Right Sized - 
+
+Simple Reporting, 
+
+6) Adding buffer for CPU and Memory
+Bring your own license
+
+7) right-size and right-cost computeâ€”across public and private cloud.
+
+
