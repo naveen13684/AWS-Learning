@@ -1,0 +1,64 @@
+Why Migrate Application to AWS?
+===============================
+1)Drive business value
+  Faster time to Market
+  New revenue - creating new capabilities, real time steaming data with no upfront cost
+  Agility - test new idea with little upfront cost, if idea doesn't work you can bring the instances
+2)Reduce risk
+  Limit upfront invenstment
+  Needs based planning
+  Easy to change your mind
+3)Total Cost to OwnerShip
+  Replace CAPEX with variable cost model
+  Optimize utilization and usage
+  Optimize manual labour
+  
+Migration Methodology
+=====================
+MRA - Migration Readiness Assement
+    Technical Capability Focused
+	Business Capability Focused
+	
+MRP - Migration Readiness and Planning
+    Discovery and Planning
+	Migration Business Case
+	Security & Compliance
+	Migration Planning
+	Operationg logging, asset management, monitoring
+	Loading Zone
+	skills
+	Migrations Experice
+	
+Migrations and Operations - Application Migration
+Application Migration Strategy 
+REHOST - Lift and Shift
+REPLATFROM - Lift configure and Shift - with few enhancements
+REFACTOR - Reimage and rearchitect application using AWS services
+REPURCHASE - application replaced by amazon SAS - Software based
+RETIRE - During discovery decide application not used and can be removed
+RETAIN - Not moved and retained until end of life
+
+
+Integrated Disvoery tools
+  AWS Doscofery connectors
+  AWS discovery agents
+AWSIntegrated Migration tools:
+  AWS Database Migration Service ( Source DB - Replication Instance - Target Database )
+  AWS Server migration Service
+  ATADATA ATAmotion
+  CloudEndure Live Migration
+AWS Migration programs
+  Professional Services
+  Migration Acceleration Program
+  Migration Partners Soluitons
+Documention and Support
+  User Guide
+  Forums
+  Contact us
+  
+  
+AWS Migration HUB
+
+
+
+Migrate -> Integrate - Test - Transform - MOnitor - Optimize
