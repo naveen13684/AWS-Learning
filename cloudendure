@@ -1,0 +1,67 @@
+Cloud Endure
+
+First Create Project in Cloud Endure
+That will tell you create IAM policy using json. 
+Download the policy from cloud Endure 
+create a policy in AWS using json
+Create user attach policy to user
+configure access key in cloud endure inside poject
+
+Now select replication settings
+Migration Source to Migration Target
+Select Replication instance - t3 medium
+slect subnet
+VPN
+volume encryption
+Network bandwith throltling 
+
+Save replication settings - > show Me HOW
+---project initual settings
+
+Now  on show me how.
+
+Now download and install the agent in Window/Linux
+It will tell you know many disks are connected
+Below are the list of services installed 
+CloudEndureConverter
+CloudEndureDriverTailer
+CloudEndure NetworkEnabler
+CloudEndureService
+CloudEndureTailer
+CloudEndureVolumeUpdater
+
+Under Project in CloudEndure - Machines , Job Progress, Audit Log, Setup and info
+LIFT and SHIFT
+Curover
+
+Firewall rules created
+replication server created
+replication server booted
+resoved CloudEndure service Manager address in the replication server
+authenticated replication server with cloudendure service manager
+downloading replication software to replication server
+create staging disks
+
+etc...
+
+Now if you go to AWS console, you will see a CloudEndure replication server 
+It will create a 50g volume
+
+
+BluePrint: 
+it is the destination AWS instance settings
+choose settings, instance type, security group, elastic ip, disk type, etc
+and save blueprint
+first volume will get migrated
+
+Launch Target Machine - in CloudEndure
+
+Snapshot will get crated, AMI will next created, and it will launch new Ec2 instance using EC2
+Go to AWS console and 
+
+you will see TARGET TAB in the project
+
+
+
+
+
