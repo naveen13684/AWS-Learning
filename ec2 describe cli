@@ -1,0 +1,45 @@
+root@ip-172-31-53-140:~# aws ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId]' --output text| sed 's/None$/None\n/'
+i-0e6bd5826e207de9f
+i-0e2fd1d825d726554
+i-071e8223ef6dd6122
+i-081c9d6506d4d9366
+i-0a8fbcbc0c0d237db
+i-0541c37707dd30fc8
+root@ip-172-31-53-140:~#
+
+
+aws cloudformation create-stack --stack-name myteststack --template-body file:///home/testuser/mytemplate.json \
+--parameters ParameterKey=Parm1,ParameterValue=test1 ParameterKey=Parm2,ParameterValue=test2
+
+aws cloudformation create-stack --stack-name eks-minitoring --template-body file:///tmp/cloudwatch.json \
+--parameters ParameterKey=criticalsnsarn,ParameterValue=arn:aws:sns:us-east-1:161764708719:eks-monitoring \
+ParameterKey=instanceid,ParameterValue=instanceidvalue \
+ParameterKey=instancename,ParameterValue=instancenamevalue \
+ParameterKey=warningsnsarn,ParameterValue=arn:aws:sns:us-east-1:161764708719:eks-monitoring
+
+aws cloudformation create-stack --stack-name eks-minitoring --template-body file:///tmp/cloudwatch.json \
+--parameters ParameterKey=criticalsnsarn,ParameterValue=arn:aws:sns:us-east-1:161764708719:eks-monitoring \
+ParameterKey=instanceid,ParameterValue=$i \
+ParameterKey=instancename,ParameterValue=$1 \
+ParameterKey=warningsnsarn,ParameterValue=arn:aws:sns:us-east-1:161764708719:eks-monitoring
+
+aws cloudformation create-stack --stack-name eks-minitoring --template-body file:///tmp/cloudwatch.json \
+--parameters ParameterKey=criticalsnsarn,ParameterValue=arn:aws:sns:us-east-1:161764708719:eks-monitoring \
+ParameterKey=instanceid,ParameterValue=i-071e8223ef6dd6122 \
+ParameterKey=warningsnsarn,ParameterValue=arn:aws:sns:us-east-1:161764708719:eks-monitoring
+
+arn:aws:sns:us-east-1:161764708719:monitoring
+
+
+aws ec2 describe-instances
+aws ec2 describe-instances --filters "Name=tag:Name,Values=MyInstance"
+aws ec2 describe-instances --filters "InstanceId"
+aws ec2 describe-instances --query "Reservations[].Instances[].InstanceId"
+aws ec2 describe-instances --query 'Reservations[].Instances[].Tags[?Key==`Name`].Value[]'
+aws ec2 describe-instances --query "Reservations[].Instances[].InstanceId"
+aws ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId,Tags[?Key==`Name`].Value[]]'
+aws ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId,Tags[?Key==`Name`].Value[]]' --output text
+aws ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId,Tags[?Key==`Name`].Value[]]' --output text| sed 's/None$/None\n/'
+aws ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId,Tags[?Key==`Name`].Value[]]' --output text| sed 's/None$/None\n/'| sed '$!N;s/\n/ /'
+aws ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId]' --output text| sed 's/None$/None\n/'| sed '$!N;s/\n/ /'
+aws ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId]' --output text| sed 's/None$/None\n/'
