@@ -1,0 +1,1138 @@
+
+Elastic Search
+================
+
+Components:
+
+Node      : It refers to a single running instance of Elasticsearch.
+
+Cluster   : It is a collection of one or more nodes. 
+
+Index     : collection of different type of documents and their properties.
+Indices, the largest unit of data in Elasticsearch, are logical partitions of documents and can be compared to a database in the world of relational databases.
+You can have as many indices defined in Elasticsearch as you want. These in turn will hold documents that are unique to each index.
+Indices are identified by lowercase names that refer to actions that are performed actions (such as searching and deleting) on the documents that are inside each index.
+
+Document  : collection of fields in a specific manner defined in JSON format. 
+	    It has a type and resides inside Index
+	    It it associated with UID , Unique Identifier
+Documents are JSON objects that are stored within an Elasticsearch index and are considered the base unit of storage. In the world of relational databases, documents can be compared to a row in table.
+Data in documents is defined with fields comprised of keys and values.
+There is no limit to how many documents you can store in a particular index.
+
+Type: json, yaml
+
+Compare RDBMS and ElasticSearch
+
+Table: Naveen_Table
+ID  Name    Age Gender
+1   Naveen  35  M
+2   Kumar   36  M
+3   HS      37  M
+
+JSON:
+Document:
+{
+	"ID": 1
+	"Name": "Naveen"
+	"Age": 35
+	"Gender": "Male"
+}
+
+1) One row in RDBMS is equal to one Document in ElasticSearch
+2) Table Name is equal to Format like JSON in ElasticSearch
+3) Database is equal to index in ElasticSearch
+
+RDBMS	      -> Database -> Tables -> Columns/Rows
+ElasticSearch -> Index    -> Types  -> Documents with Properties
+
+
+reserved fields in a Document:
+_index – the index where the document resides
+_type – the type that the document represents
+_id – the unique identifier for the document
+
+Example:
+{
+   "_id": 3,
+   “_type”: [“your index type”],
+   “_index”: [“your index name”],
+   "_source":{
+   "age": 28,
+   "name": ["daniel”],
+   "year":1989,
+}
+}
+
+Shards    : Indexes are horizontally subdivided into shards. 
+            Each shard contains all the properties of document but contains less number of JSON objects than index.
+            The horizontal separation makes shard an independent node, which can be store in any node. 
+            Primary shard is the original horizontal part of an index and 
+            then these primary shards are replicated into replica shards.
+Index size is a common cause of Elasticsearch crashes. Since there is no limit to how many documents you can store on each index, an index may take up an amount of disk space that exceeds the limits of the hosting server. As soon as an index approaches this limit, indexing will begin to fail.
+
+One way to counter this problem is to split up indices horizontally into pieces called shards. This allows you to distribute operations across shards and nodes to improve performance.
+
+When you create an index, you can define how many shards you want.  Each shard is an independent Lucene index that can be hosted anywhere in your cluster:
+
+# Example
+curl -XPUT localhost:9200/example -d '{
+  "settings" : {
+    "index" : {
+      "number_of_shards" : 2, 
+      "number_of_replicas" : 1 
+    }
+  }
+}'
+Replicas  : Elasticsearch allows a user to create replicas of their indexes and shards.
+            Replication not only helps in increasing the availability of data in case of failure, 
+            but also improves the performance of searching by carrying out a parallel search 
+            operation in these replicas.
+Replicas, as the name implies, are Elasticsearch fail-safe mechanisms and are basically copies of your index’s shards. This is a useful backup system for a rainy day — or, in other words, when a node crashes. Replicas also serve read requests, so adding replicas can help to increase search performance.
+To ensure high availability, replicas are not placed on the same node as the original shards (called the “primary” shard) from which they were replicated.
+
+Types of Nodes in ElasticSearch
+================================
+Data nodes — stores data and executes data-related operations such as search and aggregation
+Master nodes — in charge of cluster-wide management and configuration actions such as adding and removing nodes
+Client nodes — forwards cluster requests to the master node and data-related requests to data nodes
+Ingest nodes — for pre-processing documents before indexing
+Tribe nodes — act as a client node, performing read and write operations against all of the nodes in the cluster
+Machine Learning nodes (Basic License) – These are nodes available under Elastic’s Basic License that enable machine learning tasks. Machine learning nodes have xpack.ml.enabled and node.ml set to true.
+
+DISADVANTAGES
+=============
+Elasticsearch does not have multi-language support in terms of handling request and response data (only possible in JSON) unlike in Apache Solr, where it is possible in CSV, XML and JSON formats.
+
+Occasionally, Elasticsearch has a problem of Split brain situations.
+
+SPLIT-BRAIN
+===========
+Suppose you have 2 nodes — Node 1 and Node 2 and you have just one index deployed.
+
+Node 1 stores the primary shard and Node 2 stores the replica shard. Node 1 gets elected as a master during cluster start-up.
+
+Then suppose there is communication failure between the two nodes. Now, each of the nodes are in dark about the status of the other node and hence, they believe that the other has failed. Node 1 being the master will do nothing because it thinks it is up while the slave is down, so no issues. But Node 2 thinks that master has gone down and so is the primary shard, so it will automatically elect itself as master and also promote the replica shard to a primary shard.
+
+Now, the cluster gets into a confused zone and can result in an inconsistent state. Indexing requests that will hit Node 1 will index data in its copy of the primary shard, while the requests that go to Node 2 will fill the second copy of the shard. This can result in situations like when searching for data: depending on the node the search request hits, results will differ.
+
+Solution to SPLIT-BRAIN
+======================
+elasticsearch.yml
+discovery.zen.minimum_master_nodes = #
+
+This parameter determines how many nodes need to be in communication in order to elect a master
+Elastic recommends that this should be set to N/2 + 1  , where N is number of nodes
+
+Explanation with 3 Nodes:
+=========================
+For production environment, the recommendation is to plan for a 3 node cluster and set the discovery.zen.minimum_master_nodes to 2, limiting the chance of the split brain problem, but still keeping the high availability advantage. If a network failure causes one node to disappear from the other two nodes, the side with one node cannot see enough master-eligible nodes and will realize that it cannot elect itself as master. The side with two nodes will elect a new master and continue functioning correctly. As soon as the network issue is resolved, restarting the node will rejoin it to the cluster and start serving requests again.
+
+Pre-Requisites:
+==============
+1) Disable SWAP
+swapoff -a
+remove entry from /etd/fstab
+2) Set Number of Openfiles to max
+ulimit -n 65535  # as root for all users
+
+/etc/security/limits.conf  # for particular user
+elasticsearch  -  nofile  65535
+
+3)Disable fireawall/selinux or allow
+4)Max file descriptors
+5)Virtual Memory
+Elasticsearch uses a mmapfs directory by default to store its indices. The default operating system limits on mmap counts is likely to be too low, which may result in out of memory exceptions.
+sysctl -w vm.max_map_count=262144
+6) Number of threads / max user processes
+Elasticsearch uses a number of thread pools for different types of operations. It is important that it is able to create new threads whenever needed.
+
+ulimit -u 4096
+
+or /etc/security/limits.conf  nproc to 4096
+7) DNS Cache Settings
+ JVM options.
+networkaddress.cache.ttl=<timeout>
+networkaddress.cache.negative.ttl=<timeout>
+8)Java Native Access (JNA) /tmp dir not mounted with noexec
+Elasticsearch uses the Java Native Access (JNA) library for executing some platform-dependent native code
+9)TCP retransmissions to 5
+You can decrease the maximum number of TCP retransmissions to 5 by running the following command as root. Five retransmissions corresponds with a timeout of around six seconds.
+sysctl -w net.ipv4.tcp_retries2=5
+
+Bootstrap checks:
+=================
+Heap size check
+File descriptor check
+Memory lock check
+Maximum number of threads check
+Max file size check
+Maximum size virtual memory check
+Maximum map count check
+Client JVM check
+Use serial collector check
+System call filter check
+OnError and OnOutOfMemoryError checks
+Early-access check
+G1GC check
+All permission check
+Discovery configuration check
+
+
+ElasticSearch service error codes:
+=================================
+JVM internal error : 128
+Out of memory error : 127
+Stack overflow error : 126
+Unknown virtual machine error: 125
+Serious I/O error: 124
+Unknown fatal error: 1
+
+Installation
+===========
+1) Install Java
+---------------
+yum install java-1.8.0-openjdk -y
+
+2) Install rpm / tar file of Elastic Search. Download from official site.
+---------------------------------------------------------------------------
+https://www.elastic.co/downloads/elasticsearch
+wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.9.0-x86_64.rpm
+rpm -ivh elasticsearch-7.9.0-x86_64.rpm
+
+
+systemctl daemon-reload
+systemctl enable elasticsearch.service
+systemctl start elasticsearch.service
+
+Log Location: /var/log/elasticsearch/elasticsearch.log
+Config file: /etc/elasticsearch/elasticsearch.yml
+
+If you see below error in the log while starting elasticsearch service:
+
+[2020-08-28T16:23:26,646][ERROR][o.e.b.Bootstrap          ] [es-node1] Exception
+org.elasticsearch.ElasticsearchException: Failure running machine learning native code. This could be due to running on an unsupported OS or distribution, missing OS libraries, or a problem with the temp directory. To bypass this problem by running Elasticsearch without machine learning functionality set [xpack.ml.enabled: false].
+
+Add below line to config file.
+vi /etc/elasticsearch/elasticsearch.yml
+xpack.ml.enabled: false
+
+3)Check the status on all the nodes
+------------------------------------------
+systemctl status elasticsearch.service
+
+[root@es-node1 ~]# systemctl status elasticsearch.service
+● elasticsearch.service - Elasticsearch
+   Loaded: loaded (/usr/lib/systemd/system/elasticsearch.service; enabled; vendor preset: disabled)
+   Active: active (running) since Fri 2020-08-28 16:29:25 EDT; 7min ago
+     Docs: https://www.elastic.co
+ Main PID: 2128 (java)
+   CGroup: /system.slice/elasticsearch.service
+           └─2128 /usr/share/elasticsearch/jdk/bin/java -Xshare:auto -Des.networkadd...
+
+Aug 28 16:28:40 es-node1 systemd[1]: Starting Elasticsearch...
+Aug 28 16:28:48 es-node1 systemd-entrypoint[2128]: si_signo 4, si_code: 2, si_errno...c
+Aug 28 16:29:25 es-node1 systemd[1]: Started Elasticsearch.
+Hint: Some lines were ellipsized, use -l to show in full.
+[root@es-node1 ~]#
+
+
+[root@es-node2 ~]# systemctl status elasticsearch.service
+● elasticsearch.service - Elasticsearch
+   Loaded: loaded (/usr/lib/systemd/system/elasticsearch.service; enabled; vendor preset: disabled)
+   Active: active (running) since Fri 2020-08-28 16:31:12 EDT; 5min ago
+     Docs: https://www.elastic.co
+ Main PID: 2267 (java)
+   CGroup: /system.slice/elasticsearch.service
+           └─2267 /usr/share/elasticsearch/jdk/bin/java -Xshare:auto -Des.networkaddress....
+
+Aug 28 16:30:26 es-node2 systemd[1]: Starting Elasticsearch...
+Aug 28 16:30:35 es-node2 systemd-entrypoint[2267]: si_signo 4, si_code: 2, si_errno: 0,...ac
+Aug 28 16:31:12 es-node2 systemd[1]: Started Elasticsearch.
+Hint: Some lines were ellipsized, use -l to show in full.
+[root@es-node2 ~]#
+
+
+4) disable firewall and selinux , swap
+------------------------------------------------------
+setenforce 0
+systemctl disable firewalld
+systemctl stop firewalld
+
+5) Increase java memory to 2 gb min
+--------------------------------------
+vi /etc/elasticsearch/jvm.options
+-Xms2g
+-Xmx2g
+
+6)Create a Data Directory for Elasticsearch
+-------------------------------------------
+
+mkdir /var/lib/elasticsearch/data
+chown -R elasticsearch:elasticsearch /var/lib/elasticsearch/data
+chmod -R 775 /var/lib/elasticsearch/data
+
+
+7) Set Data Directory
+vi /etc/elasticsearch/elasticsearch.yml
+
+# Path to directory where to store the data (separate multiple locations by comma):
+#
+path.data: /var/lib/elasticsearch/data
+#
+# Path to log files:
+#
+path.logs: /var/log/elasticsearch
+#
+
+8) Configure Elasticsearch cluster
+----------------------------------
+Before you configure cluster stop elasticsearh service:
+systemctl stop elasticsearch.service
+
+All the nodes set the cluster name:
+vi /etc/elasticsearch/elasticsearch.yml
+cluster.name: es-naveen
+
+Set node name for all nodes:
+vi /etc/elasticsearch/elasticsearch.yml
+node.name: es-node1  #on node 1
+node.name: es-node2  #on node 2
+node.name: es-node3  #on node 3
+
+Bind an IP for Elasticsearch:
+vi /etc/elasticsearch/elasticsearch.yml
+network.host: 192.168.1.150  #on node 1
+network.host: 192.168.1.151  #on node 2
+
+Set discovery by specifying all Nodes IP addresses (Add it on all nodes):
+discovery.zen.ping.unicast.hosts: ["192.168.1.150", "192.168.1.151"]
+discovery.zen.ping.unicast.hosts: ["192.168.1.150", "192.168.1.151", "192.168.1.152"]
+
+
+Specify the number of Master eligible nodes:
+vi /etc/elasticsearch/elasticsearch.yml
+discovery.zen.minimum_master_nodes: 2
+
+Define Data & Master nodes:
+node.master: true
+node.data: true
+
+Start Elasticsearch
+systemctl start elasticsearch.service
+
+[root@es-node1 elasticsearch]# ss -aultpn |grep -i 9200
+tcp    LISTEN     0      128      [::ffff:192.168.1.150]:9200               [::]:*                   users:(("java",pid=1712,fd=246))
+[root@es-node1 elasticsearch]#
+
+
+Run the following curl call and make sure that the cluster status is Green:
+curl http://192.168.1.150:9200/_cluster/health?pretty
+
+
+[root@es-node1 elasticsearch]# curl http://192.168.1.150:9200/_cluster/health?pretty
+{
+  "error" : {
+    "root_cause" : [
+      {
+        "type" : "master_not_discovered_exception",
+        "reason" : null
+      }
+    ],
+    "type" : "master_not_discovered_exception",
+    "reason" : null
+  },
+  "status" : 503
+}
+
+solution to master_not_discovered_exception:
+vi /etc/elasticsearch/elasticsearch.yml
+cluster.initial_master_nodes: ["es-node1"]
+
+[root@es-node1 elasticsearch]# curl http://192.168.1.150:9200/_cluster/health?pretty
+{
+  "cluster_name" : "es-naveen",
+  "status" : "green",
+  "timed_out" : false,
+  "number_of_nodes" : 2,
+  "number_of_data_nodes" : 2,
+  "active_primary_shards" : 0,
+  "active_shards" : 0,
+  "relocating_shards" : 0,
+  "initializing_shards" : 0,
+  "unassigned_shards" : 0,
+  "delayed_unassigned_shards" : 0,
+  "number_of_pending_tasks" : 0,
+  "number_of_in_flight_fetch" : 0,
+  "task_max_waiting_in_queue_millis" : 0,
+  "active_shards_percent_as_number" : 100.0
+}
+
+vi /etc/elasticsearch/elasticsearch.yml
+cluster.initial_master_nodes: ["es-node1"]
+
+
+If it is single node elastic cluster:
+discovery.type: single-node
+
+Ref:
+https://www.elastic.co/guide/en/elasticsearch/reference/master/discovery-settings.html#initial_master_nodes
+
+
+[root@es-node1 ~]# curl http://192.168.1.150:9200
+{
+  "name" : "es-node1",
+  "cluster_name" : "es-naveen",
+  "cluster_uuid" : "MjmroB72Q42CeVyQsSqLCw",
+  "version" : {
+    "number" : "7.9.0",
+    "build_flavor" : "default",
+    "build_type" : "rpm",
+    "build_hash" : "a479a2a7fce0389512d6a9361301708b92dff667",
+    "build_date" : "2020-08-11T21:36:48.204330Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.6.0",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+[root@es-node1 ~]#
+
+
+[root@es-node1 ~]# curl http://192.168.1.151:9200
+{
+  "name" : "es-node2",
+  "cluster_name" : "es-naveen",
+  "cluster_uuid" : "MjmroB72Q42CeVyQsSqLCw",
+  "version" : {
+    "number" : "7.9.0",
+    "build_flavor" : "default",
+    "build_type" : "rpm",
+    "build_hash" : "a479a2a7fce0389512d6a9361301708b92dff667",
+    "build_date" : "2020-08-11T21:36:48.204330Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.6.0",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+[root@es-node1 ~]#
+
+
+If you configure the same setting using multiple methods, Elasticsearch applies the settings in following order of precedence:
+
+Transient setting
+Persistent setting
+elasticsearch.yml setting
+Default setting value
+
+
+
+Path settings
+------------
+path:
+  logs: /var/log/elasticsearch
+  data: /var/data/elasticsearch
+
+path:
+  data:
+    - /mnt/elasticsearch_1
+    - /mnt/elasticsearch_2
+    - /mnt/elasticsearch_3
+
+
+path.data: /var/lib/elasticsearch/data
+path.logs: /var/log/elasticsearch
+
+Cluster name:
+------------
+cluster.name: logging-prod
+
+Node name:
+---------
+node.name: prod-data-2
+
+Network host:
+-------------
+network.host: 192.168.1.10
+
+Discovery settings:
+-------------------
+discovery.seed_hosts:
+   - 192.168.1.10:9300
+   - 192.168.1.11 
+   - seeds.mydomain.com 
+   - [0:0:0:0:0:ffff:c0a8:10c]:9301 
+cluster.initial_master_nodes: 
+   - master-node-a
+   - master-node-b
+   - master-node-c
+
+Heap size:
+-Xms2g 
+-Xmx2g 
+
+Environment Variable:
+ES_JAVA_OPTS="-Xms2g -Xmx2g" ./bin/elasticsearch 
+ES_JAVA_OPTS="-Xms4000m -Xmx4000m" ./bin/elasticsearch 
+
+
+Heap dump path:
+/var/lib/elasticsearch
+-XX:HeapDumpPath=... in jvm.options
+
+GC logging:
+# Turn off all previous logging configuratons
+-Xlog:disable
+
+# Default settings from JEP 158, but with `utctime` instead of `uptime` to match the next line
+-Xlog:all=warning:stderr:utctime,level,tags
+
+# Enable GC logging to a custom location with a variety of options
+-Xlog:gc*,gc+age=trace,safepoint:file=/opt/my-app/gc.log:utctime,pid,tags:filecount=32,filesize=64m
+
+MY_OPTS="-Xlog:disable -Xlog:all=warning:stderr:utctime,level,tags -Xlog:gc=debug:stderr:utctime"
+docker run -e ES_JAVA_OPTS="$MY_OPTS" # etc
+
+Temp directory:
+[root@es-node1 hsperfdata_elasticsearch]# pwd
+/tmp/systemd-private-03a7ccab361e4d9690182980bc8ce9d2-elasticsearch.service-xJR3Qs/tmp/hsperfdata_elasticsearch
+[root@es-node1 hsperfdata_elasticsearch]#
+
+
+ax_file_descriptors:
+====================
+[root@es-node1 ~]# curl -X GET "192.168.1.150:9200/_nodes/stats/process?filter_path=**.max_file_descriptors&pretty"
+{
+  "nodes" : {
+    "-Nz6USUSRlS9tcJeGt4RcA" : {
+      "process" : {
+        "max_file_descriptors" : 65535
+      }
+    },
+    "mRtAXzA5R1Cc5CdQP2Y4Gw" : {
+      "process" : {
+        "max_file_descriptors" : 65535
+      }
+    }
+  }
+}
+[root@es-node1 ~]#
+
+
+Set up a new Elasticsearch instance:
+========================================
+1)Specify the name of the cluster with the cluster.name setting in elasticsearch.yml. 
+cluster.name: "logging-prod" to elasticsearch.yml
+Start Elasticsearch. The node automatically discovers and joins the specified cluster.
+
+2)To add a node to a cluster running on multiple machines, you must also set discovery.seed_hosts so that the new node can discover the rest of its cluster.
+
+discovery.seed_hosts:
+   - 192.168.1.10:9300
+   - 192.168.1.11 
+   - seeds.mydomain.com 
+   - [0:0:0:0:0:ffff:c0a8:10c]:9301 
+
+
+
+
+BACKUP and RESTORE
+==================
+It required a shared location for all the nodes in the cluster
+It can be NFS, s3 etc..
+
+PUT http://{{ClusterMasterIP}}:{{HTTP_Port}}/_snapshot/my_backup
+
+BODY:
+{
+  "type": "fs",
+  "settings": {
+    "location": "/var/elasticsearch/backup"
+  }
+}
+
+ANS:
+{
+    "acknowledged": true
+}
+
+Cluster Update settings
+=======================
+PUT /_cluster/settings
+
+The order of precedence for cluster settings is:
+
+transient cluster settings :where they don’t survive a full cluster restart.
+persistent cluster settings :meaning they apply across restarts
+settings in the elasticsearch.yml configuration file.
+
+
+Installing KIBANA
+================
+
+[kibana-7.x]
+name=Kibana repository for 7.x packages
+baseurl=https://artifacts.elastic.co/packages/7.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
+
+yum install kibana -y
+sudo /bin/systemctl daemon-reload
+sudo /bin/systemctl enable kibana.service
+sudo systemctl start kibana.service
+
+[root@es-node1 kibana]# egrep -v "#|^$" kibana.yml
+
+server.host: "192.168.1.150"
+server.name: es-node1
+elasticsearch.hosts: ["http://192.168.1.150:9200","http://192.168.1.151:9200"]
+
+
+Installing filebeat:
+====================
+curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-6.8.12-x86_64.rpm
+rpm -ivh filebeat-6.8.12-x86_64.rpm
+filebeat test config -e
+
+cd /etc/filebeat/
+vi fields.yml
+
+
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /var/log/*.log
+    - /var/log/messages
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+setup.template.settings:
+  index.number_of_shards: 3
+setup.kibana:
+    host: "192.168.1.150:5601"
+output.elasticsearch:
+  hosts: ["http://192.168.1.150:9200","http://192.168.1.151:9200"]
+processors:
+  - add_host_metadata: ~
+  - add_cloud_metadata: ~
+
+
+[root@es-node1 kibana]# egrep -v "#|^$" filebeat.yml
+
+filebeat setup --dashboards
+
+sudo service filebeat start
+systemctl status filebeat
+systemctl enable filebeat
+
+
+=========================================
+
+
+Full Cluster Restart
+
+Disable shard allocation
+Stop indexing and perform a synced flush
+Shutdown all nodes
+Upgrade all nodes
+Upgrade any plugins
+Start each upgraded node
+Wait for all nodes to join the cluster and report a status of yellow
+Re-enable allocation
+
+
+
+
+===================================================
+
+Elasticsearch index is yellow
+Health Status
+A yellow status means that all primary shards are allocated to nodes, but some replicas are not. A red status means at least one primary shard is not allocated to any node. A common cause of a yellow status is not having enough nodes in the cluster for the primary or replica shards.
+
+
+=====================================================
+
+1) Create a index call schools and type doc"
+http://{{ClusterMasterIP}}:{{HTTP_Port}}/schools
+
+2) Add document record.
+http://{{ClusterMasterIP}}:{{HTTP_Port}}/schools/_doc/1
+{
+   name":"City School", "description":"ICSE", "street":"West End",
+   "city":"Meerut",
+   "state":"UP", "zip":"250002", "location":[28.9926174, 77.692485],
+   "fees":3500,
+   "tags":["fully computerized"], "rating":"4.5"
+}
+
+3) Add one more record
+http://{{ClusterMasterIP}}:{{HTTP_Port}}/schools/_doc/2
+{
+   "name":"Sudharshan School", "description":"CBSE", "street":"Bannerghatta Road",
+   "city":"Bangalore",
+   "state":"KA", "zip":"560076", "location":[29.9926174, 87.692485],
+   "fees":83500,
+   "tags":["fully computerized"], "rating":"4.9"
+}
+
+4)Create a index call "students" and type _record"
+http://{{ClusterMasterIP}}:{{HTTP_Port}}/students/_record/1
+{
+{
+  "name": "Naveen",
+  "ID" : 1,
+  "age": 35,
+  "gender":"M"
+},
+{
+  "name": "Kumar",
+  "ID" : 2,
+  "age": 36,
+  "gender":"M"
+},
+{
+  "name": "HS",
+  "ID" : 3,
+  "age": 37,
+  "gender":"F"
+}
+}
+
+Table: students
+ID  Name    Age Gender
+1   Naveen  35  M
+2   Kumar   36  M
+3   HS      37  M
+
+
+==================================================================================================================
+Installing ElasticSearch as a Operator in Kubernetes
+====================================================
+
+kubectl apply -f https://download.elastic.co/downloads/eck/1.0.0/all-in-one.yaml
+kubectl -n elastic-system get all
+kubectl -n elastic-system logs -f statefulset.apps/elastic-operator
+kubectl get crd
+cat <<EOF | kubectl apply -f -
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch
+spec:
+  version: 7.8.1
+  nodeSets:
+  - name: default
+    count: 1
+    config:
+      node.master: true
+      node.data: true
+      node.ingest: true
+      node.store.allow_mmap: false
+EOF
+
+
+
+[root@k-master ~]# cat es.yaml
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch-sample
+spec:
+  version: 7.8.1
+  nodeSets:
+    - name: default
+      config:
+        node.master: true
+        node.data: true
+        node.attr.attr_name: attr_value
+        node.store.allow_mmap: false
+        node.ingest: true
+        xpack.ml.enabled: false
+      podTemplate:
+        metadata:
+          labels:
+            es: es-cluster
+        spec:
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  memory: 3Gi
+                  cpu: 1
+                limits:
+                  memory: 3Gi
+                  cpu: 2
+      count: 1
+
+[root@k-master ~]#
+
+
+kubectl get elasticsearch
+kubectl get all
+kubectl logs elasticsearch-es-default-0
+kubectl port-forward service/elasticsearch-es-http 9200
+
+PASSWORD=$(kubectl get secret elasticsearch-sample-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode)
+
+[root@k-master ~]# curl -u "elastic:$PASSWORD" -k "https://localhost:9200"
+{
+  "name" : "elasticsearch-sample-es-default-0",
+  "cluster_name" : "elasticsearch-sample",
+  "cluster_uuid" : "URr6EJgfRvmjXCw3FX-C-w",
+  "version" : {
+    "number" : "7.8.1",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "b5ca9c58fb664ca8bf9e4057fc229b3396bf3a89",
+    "build_date" : "2020-07-21T16:40:44.668009Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.5.1",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+[root@k-master ~]#
+
+
+[root@k-master ~]# curl -u "elastic:$PASSWORD" -k "https://localhost:9200/_cluster/health?pretty"
+{
+  "cluster_name" : "elasticsearch-sample",
+  "status" : "green",
+  "timed_out" : false,
+  "number_of_nodes" : 1,
+  "number_of_data_nodes" : 1,
+  "active_primary_shards" : 0,
+  "active_shards" : 0,
+  "relocating_shards" : 0,
+  "initializing_shards" : 0,
+  "unassigned_shards" : 0,
+  "delayed_unassigned_shards" : 0,
+  "number_of_pending_tasks" : 0,
+  "number_of_in_flight_fetch" : 0,
+  "task_max_waiting_in_queue_millis" : 0,
+  "active_shards_percent_as_number" : 100.0
+}
+[root@k-master ~]#
+
+
+In case if you want to scale up to 3 pods set count=3
+============
+
+cat <<EOF | kubectl apply -f -
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+name: elasticsearch
+spec:
+version: 7.5.2
+nodeSets:
+ - name: default
+   count: 3
+   config:
+      node.master: true
+      node.data: true
+      node.ingest: true
+      node.store.allow_mmap: false
+EOF
+
+In case if you are using external storage class
+=======================
+cat <<EOF | kubectl apply -f -
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch
+spec:
+  version: 7.5.2
+  nodeSets:
+- name: default
+  count: 3
+  config:
+    node.master: true
+    node.data: true
+    node.ingest: true
+    node.store.allow_mmap: false
+  volumeClaimTemplates:
+  - metadata:
+    name: elasticsearch-data
+     spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+         storage: 4Gi
+    storageClassName: standard
+EO
+
+
+kibana
+==========
+
+[root@k-master ~]# cat kibana.yaml
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: elasticsearch-sample
+spec:
+  version: 7.8.1
+  count: 1
+  elasticsearchRef:
+    name: elasticsearch-sample
+[root@k-master ~]#
+
+
+Go ahead and specify a Kibana instance and reference your Elasticsearch cluster:
+
+cat <<EOF | kubectl apply -f -
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: elasticsearch-sample
+spec:
+  version: 7.8.1
+  count: 1
+  elasticsearchRef:
+    name: elasticsearch-sample
+EOF
+
+[root@k-master ~]# kubectl get kibana
+NAME          		  HEALTH   NODES   VERSION   AGE
+elasticsearch-sample  green            7.8.1     3h32m
+[root@k-master ~]#
+
+[root@k-master ~]# kubectl get pod --selector='kibana.k8s.elastic.co/name=elasticsearch-sample'
+NAME                                       READY   STATUS    RESTARTS   AGE
+elasticsearch-sample-kb-67fc8b5f79-6qcb8   1/1     Running   0          15m
+[root@k-master ~]#
+
+[root@k-master ~]# kubectl get service elasticsearch-sample-kb-http
+NAME                           TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+elasticsearch-sample-kb-http   ClusterIP   10.108.241.201   <none>        5601/TCP   16m
+
+[root@k-master ~]# echo bHpwdGZobnpnc3prYmI0aGZndms1eHFr|base64 --decode
+lzptfhnzgszkbb4hfgvk5xqk[root@k-master ~]#
+
+
+[root@k-master ~]#
+[root@k-master ~]# kubectl get secret elasticsearch-sample-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
+lzptfhnzgszkbb4hfgvk5xqk
+[root@k-master ~]#
+
+Expose kibana service as node port : Remove clusterIP and put NodePort in service, apply config.
+==================================
+
+To delete elasticsearch resource on all namespaces
+kubectl delete elastic --all --all-namespaces
+
+to delete Operator:
+kubectl delete -f https://download.elastic.co/downloads/eck/1.0.0/all-in-one.yaml
+==============================================================================================
+Install on Kubernetes
+Install Operator Lifecycle Manager (OLM), a tool to help manage the Operators running on your cluster.
+
+
+$ curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/0.16.1/install.sh | bash -s 0.16.1
+Copy to Clipboard
+Install the operator by running the following command:What happens when I execute this command?
+
+[root@k-master ~]# curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/0.16.1/install.sh | bash -s 0.16.1
+customresourcedefinition.apiextensions.k8s.io/catalogsources.operators.coreos.com unchanged
+customresourcedefinition.apiextensions.k8s.io/clusterserviceversions.operators.coreos.com unchanged
+customresourcedefinition.apiextensions.k8s.io/installplans.operators.coreos.com unchanged
+customresourcedefinition.apiextensions.k8s.io/operatorgroups.operators.coreos.com unchanged
+customresourcedefinition.apiextensions.k8s.io/operators.operators.coreos.com unchanged
+customresourcedefinition.apiextensions.k8s.io/subscriptions.operators.coreos.com unchanged
+customresourcedefinition.apiextensions.k8s.io/catalogsources.operators.coreos.com condition met
+customresourcedefinition.apiextensions.k8s.io/clusterserviceversions.operators.coreos.com condition met
+customresourcedefinition.apiextensions.k8s.io/installplans.operators.coreos.com condition met
+customresourcedefinition.apiextensions.k8s.io/operatorgroups.operators.coreos.com condition met
+customresourcedefinition.apiextensions.k8s.io/operators.operators.coreos.com condition met
+customresourcedefinition.apiextensions.k8s.io/subscriptions.operators.coreos.com condition met
+namespace/olm created
+namespace/operators unchanged
+serviceaccount/olm-operator-serviceaccount created
+clusterrole.rbac.authorization.k8s.io/system:controller:operator-lifecycle-manager unchanged
+clusterrolebinding.rbac.authorization.k8s.io/olm-operator-binding-olm unchanged
+deployment.apps/olm-operator created
+deployment.apps/catalog-operator created
+clusterrole.rbac.authorization.k8s.io/aggregate-olm-edit unchanged
+clusterrole.rbac.authorization.k8s.io/aggregate-olm-view unchanged
+operatorgroup.operators.coreos.com/global-operators unchanged
+operatorgroup.operators.coreos.com/olm-operators created
+clusterserviceversion.operators.coreos.com/packageserver created
+catalogsource.operators.coreos.com/operatorhubio-catalog created
+Waiting for deployment "olm-operator" rollout to finish: 0 of 1 updated replicas are available...
+deployment "olm-operator" successfully rolled out
+Waiting for deployment "catalog-operator" rollout to finish: 0 of 1 updated replicas are available...
+deployment "catalog-operator" successfully rolled out
+Package server phase: Installing
+Package server phase: Succeeded
+deployment "packageserver" successfully rolled out
+[root@k-master ~]#
+
+
+$ kubectl create -f https://operatorhub.io/install/elastic-cloud-eck.yaml
+Copy to Clipboard
+This Operator will be installed in the "operators" namespace and will be usable from all namespaces in the cluster.
+
+After install, watch your operator come up using next command.
+
+$ kubectl get csv -n operators
+Copy to Clipboard
+To use it, checkout the custom resource definitions (CRDs) introduced by this operator to start using it.
+
+[root@k-master ~]# kubectl get po -n operators
+NAME                                READY   STATUS    RESTARTS   AGE
+elastic-operator-7ccd99cbc5-n29g8   1/1     Running   0          35s
+[root@k-master ~]#
+
+CSV : Cluster Service Version
+[root@k-master ~]# kubectl get csv -n operators
+NAME                       DISPLAY                       VERSION   REPLACES                   PHASE
+elastic-cloud-eck.v1.2.1   Elastic Cloud on Kubernetes   1.2.1     elastic-cloud-eck.v1.2.0   Succeeded
+[root@k-master ~]#
+
+[root@k-master ~]# cat es.yaml
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch-sample
+spec:
+  version: 7.8.1
+  nodeSets:
+    - name: default
+      config:
+        node.master: true
+        node.data: true
+        node.attr.attr_name: attr_value
+        node.store.allow_mmap: false
+      podTemplate:
+        metadata:
+          labels:
+            foo: bar
+        spec:
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  memory: 4Gi
+                  cpu: 1
+                limits:
+                  memory: 4Gi
+                  cpu: 2
+      count: 3
+
+[root@k-master ~]#
+
+
+[root@k-master ~]# kubectl create -f es.yaml
+elasticsearch.elasticsearch.k8s.elastic.co/elasticsearch-sample created
+[root@k-master ~]#
+
+
+
+[root@k-master ~]# kubectl get EnterpriseSearch
+NAME         HEALTH   NODES   VERSION   AGE
+ent-sample                    7.8.1     5m38s
+[root@k-master ~]#
+
+create storage class:
+===================
+[root@k-master ~]# cat pv.yaml
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+[root@k-master ~]#
+
+
+[root@k-master ~]# kubectl get sc
+NAME            PROVISIONER                    RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+local-storage   kubernetes.io/no-provisioner   Delete          WaitForFirstConsumer   false                  2m38s
+[root@k-master ~]#
+
+create pv
+============
+[root@k-master ~]# cat pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: example-pv
+spec:
+  capacity:
+    storage: 100Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: local-storage
+  local:
+    path: /var/elasticsearch
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - example-node
+
+
+[root@k-master ~]# kubectl create -f pv.yaml
+persistentvolume/example-pv created
+[root@k-master ~]# kubectl get pv
+NAME         CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS    REASON   AGE
+example-pv   100Gi      RWO            Delete           Available           local-storage            5s
+[root@k-master ~]#
+
+
+[root@k-master ~]# PASSWORD=$(kubectl get secret elasticsearch-sample-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode)
+[root@k-master ~]# echo $PASSWORD
+lzptfhnzgszkbb4hfgvk5xqk
+[root@k-master ~]# curl -u "elastic:$PASSWORD" -k "https://localhost:9200"
+{
+  "name" : "elasticsearch-sample-es-default-0",
+  "cluster_name" : "elasticsearch-sample",
+  "cluster_uuid" : "URr6EJgfRvmjXCw3FX-C-w",
+  "version" : {
+    "number" : "7.8.1",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "b5ca9c58fb664ca8bf9e4057fc229b3396bf3a89",
+    "build_date" : "2020-07-21T16:40:44.668009Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.5.1",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+[root@k-master ~]# curl -u "elastic:$PASSWORD" -k "https://localhost:9200/_cluster/health?pretty"
+{
+  "cluster_name" : "elasticsearch-sample",
+  "status" : "green",
+  "timed_out" : false,
+  "number_of_nodes" : 1,
+  "number_of_data_nodes" : 1,
+  "active_primary_shards" : 0,
+  "active_shards" : 0,
+  "relocating_shards" : 0,
+  "initializing_shards" : 0,
+  "unassigned_shards" : 0,
+  "delayed_unassigned_shards" : 0,
+  "number_of_pending_tasks" : 0,
+  "number_of_in_flight_fetch" : 0,
+  "task_max_waiting_in_queue_millis" : 0,
+  "active_shards_percent_as_number" : 100.0
+}
+[root@k-master ~]#
