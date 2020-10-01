@@ -1,0 +1,59 @@
+What is ISTIO?
+===============
+Its a Service mesh. The term service mesh is used to describe the network of microservices that make up such applications and the interactions between them
+Istio makes it easy to create a network of deployed services with load balancing
+service-to-service authentication, monitoring
+
+
+Requirements:
+=============
+discovery, load balancing, failure recovery, metrics, and monitoring.
+
+complex operational requirements: 
+==================================
+like A/B testing, canary rollouts, rate limiting, access control, and end-to-end authentication.
+
+
+Features of Istio:
+==================
+You add Istio support to services by deploying a special sidecar proxy throughout your environment that intercepts all network communication between microservices, then configure and manage Istio using its control plane functionality, which includes:
+
+Automatic load balancing for HTTP, gRPC, WebSocket, and TCP traffic.
+
+Fine-grained control of traffic behavior with rich routing rules, retries, failovers, and fault injection.
+
+A pluggable policy layer and configuration API supporting access controls, rate limits and quotas.
+
+Automatic metrics, logs, and traces for all traffic within a cluster, including cluster ingress and egress.
+
+Secure service-to-service communication in a cluster with strong identity-based authentication and authorization.
+
+Architecture:
+=============
+An Istio service mesh is logically split into a data plane and a control plane.
+
+The data plane is composed of a set of intelligent proxies (Envoy) deployed as sidecars. These proxies mediate and control all network communication between microservices. They also collect and report telemetry on all mesh traffic.
+
+The control plane manages and configures the proxies to route traffic.
+
+Components of ISTIO
+===================
+Envoy: 
+======
+Envoy is a high-performance proxy developed in C++ to mediate all inbound and outbound traffic for all services in the service mesh.
+Envoy proxies are the only Istio components that interact with data plane traffic.
+Envoy proxies are deployed as sidecars to services, build in features are
+1 	Dynamic service discovery
+2 	Load balancing
+3 	TLS termination
+4 	HTTP/2 and gRPC proxies
+5 	Circuit breakers
+6 	Health checks
+7 	Staged rollouts with %-based traffic split
+8 	Fault injection
+9 	Rich metrics
+
+Istiod:
+========
+Istiod provides service discovery, configuration and certificate management.
+Istiod converts high level routing rules that control traffic behavior into Envoy-specific configurations, 
