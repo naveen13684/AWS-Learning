@@ -1,0 +1,272 @@
+HELM
+=====
+- helm search:    search for charts
+- helm pull:      download a chart to your local directory to view
+- helm install:   upload the chart to Kubernetes
+- helm list:      list releases of charts
+- helm delete my-release
+
+Available Commands:
+  completion  generate autocompletions script for the specified shell
+  create      create a new chart with the given name
+  dependency  manage a chart's dependencies
+  env         helm client environment information
+  get         download extended information of a named release
+  help        Help about any command
+  history     fetch release history
+  install     install a chart
+  lint        examine a chart for possible issues
+  list        list releases
+  package     package a chart directory into a chart archive
+  plugin      install, list, or uninstall Helm plugins
+  pull        download a chart from a repository and (optionally) unpack it in local directory
+  repo        add, list, remove, update, and index chart repositories
+  rollback    roll back a release to a previous revision
+  search      search for a keyword in charts
+  show        show information of a chart
+  status      display the status of the named release
+  template    locally render templates
+  test        run tests for a release
+  uninstall   uninstall a release
+  upgrade     upgrade a release
+  verify      verify that a chart at the given path has been signed and is valid
+  version     print the client version information
+
+
+Adding Repo:
+============
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+listing repo:
+=============
+[root@k-master ~]# helm repo list
+NAME            URL
+rancher-stable  https://releases.rancher.com/server-charts/stable
+bitnami         https://charts.bitnami.com/bitnami
+[root@k-master ~]# helm repo add bitnami https://charts.bitnami.com/bitnami^C
+[root@k-master ~]#
+
+Installing application:
+=======================
+helm install my-release bitnami/nginx
+helm install my-release -f values.yaml bitnami/nginx
+helm install my-release --set imagePullPolicy=Always bitnami/nginx
+
+listing chart releases:
+=======================
+[root@k-master ~]# helm list
+NAME                    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
+my-nginx-release        default         1               2020-10-01 17:29:19.313041795 +0530 IST deployed        nginx-7.1.1     1.19.3
+[root@k-master ~]#
+
+Searching charts inside repo:
+==============================
+[root@k-master ~]# helm search repo|grep -i nginx
+bitnami/nginx                           7.1.1           1.19.3          Chart for the nginx server
+bitnami/nginx-ingress-controller        5.6.5           0.35.0          Chart for the nginx Ingress controller
+[root@k-master ~]#
+
+Get user specified values in the release chart:
+=========================================
+[root@k-master ~]# helm get values my-nginx-release
+USER-SUPPLIED VALUES:
+null
+[root@k-master ~]#
+
+check status of the release:
+===========================
+[root@k-master ~]# helm status my-nginx-release
+NAME: my-nginx-release
+LAST DEPLOYED: Thu Oct  1 17:29:19 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+** Please be patient while the chart is being deployed **
+
+NGINX can be accessed through the following DNS name from within your cluster:
+
+    my-nginx-release.default.svc.cluster.local (port 80)
+
+To access NGINX from outside the cluster, follow the steps below:
+
+1. Get the NGINX URL by running these commands:
+
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+        Watch the status with: 'kubectl get svc --namespace default -w my-nginx-release'
+
+    export SERVICE_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].port}" services my-nginx-release)
+    export SERVICE_IP=$(kubectl get svc --namespace default my-nginx-release -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+    echo "http://${SERVICE_IP}:${SERVICE_PORT}"
+[root@k-master ~]#
+
+[root@k-master ~]# kubectl get svc
+NAME               TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+kubernetes         ClusterIP      10.96.0.1       <none>        443/TCP        3d
+my-nginx-release   LoadBalancer   10.109.139.37   <pending>     80:32391/TCP   17m
+[root@k-master ~]# 
+
+upgrade exising values in helm chart:
+====================================
+create config file
+
+example: upgrade service from loadBalancer to nodePort
+
+[root@k-master ~]# cat config.yaml
+service:
+  type: NodePort
+  port: 80
+  httpsPort: 443
+  nodePorts:
+    http: ""
+    https: ""
+  targetPort:
+    http: http
+    https: https
+  annotations: {}
+  externalTrafficPolicy: Cluster
+[root@k-master ~]#
+
+
+
+
+[root@k-master ~]# helm upgrade --values config.yaml my-nginx-release bitnami/nginx
+Release "my-nginx-release" has been upgraded. Happy Helming!
+NAME: my-nginx-release
+LAST DEPLOYED: Thu Oct  1 17:52:33 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+TEST SUITE: None
+NOTES:
+** Please be patient while the chart is being deployed **
+
+NGINX can be accessed through the following DNS name from within your cluster:
+
+    my-nginx-release.default.svc.cluster.local (port 80)
+
+To access NGINX from outside the cluster, follow the steps below:
+
+1. Get the NGINX URL by running these commands:
+
+    export NODE_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services my-nginx-release)
+    export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+    echo "http://${NODE_IP}:${NODE_PORT}"
+[root@k-master ~]# 
+
+
+[root@k-master ~]# kubectl get svc
+NAME               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+kubernetes         ClusterIP   10.96.0.1       <none>        443/TCP        3d
+my-nginx-release   NodePort    10.109.139.37   <none>        80:32391/TCP   23m
+[root@k-master ~]# 
+
+To see custom values supplied by user:
+======================================
+[root@k-master ~]# helm get values my-nginx-release
+USER-SUPPLIED VALUES:
+service:
+  annotations: {}
+  externalTrafficPolicy: Cluster
+  httpsPort: 443
+  nodePorts:
+    http: ""
+    https: ""
+  port: 80
+  targetPort:
+    http: http
+    https: https
+  type: NodePort
+[root@k-master ~]#
+
+To check specific value in the release chart
+===========================================
+[root@k-master ~]# helm get values my-nginx-release -a -o json|jq '.service'
+{
+  "annotations": {},
+  "externalTrafficPolicy": "Cluster",
+  "httpsPort": 443,
+  "nodePorts": {
+    "http": "",
+    "https": ""
+  },
+  "port": 80,
+  "targetPort": {
+    "http": "http",
+    "https": "https"
+  },
+  "type": "NodePort"
+}
+[root@k-master ~]#
+
+
+how to do the upgrade by changing the specific values:
+======================================================
+Example: change imagepull policy to Always from 
+
+Add values to config.yaml:
+
+[root@k-master ~]# cat config.yaml
+service:
+  type: NodePort
+  port: 80
+  httpsPort: 443
+  nodePorts:
+    http: ""
+    https: ""
+  targetPort:
+    http: http
+    https: https
+  annotations: {}
+  externalTrafficPolicy: Cluster
+image:
+  pullPolicy: Always
+[root@k-master ~]#
+
+
+[root@k-master ~]# helm upgrade --install --namespace default --values config.yaml my-nginx-release bitnami/nginx
+Release "my-nginx-release" has been upgraded. Happy Helming!
+NAME: my-nginx-release
+LAST DEPLOYED: Thu Oct  1 19:06:55 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 14
+TEST SUITE: None
+NOTES:
+** Please be patient while the chart is being deployed **
+
+NGINX can be accessed through the following DNS name from within your cluster:
+
+    my-nginx-release.default.svc.cluster.local (port 80)
+
+To access NGINX from outside the cluster, follow the steps below:
+
+1. Get the NGINX URL by running these commands:
+
+    export NODE_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services my-nginx-release)
+    export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+    echo "http://${NODE_IP}:${NODE_PORT}"
+[root@k-master ~]# kubectl get deploy
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+my-nginx-release   1/1     1            1           97m
+my-release-nginx   1/1     1            1           31m
+[root@k-master ~]# kubectl get po
+NAME                                READY   STATUS    RESTARTS   AGE
+my-nginx-release-74fd69f69b-xbp2n   1/1     Running   0          97m
+my-nginx-release-cc5cdfd-hrr84      0/1     Running   0          9s
+my-release-nginx-7b5b676974-z2fwm   1/1     Running   0          31m
+[root@k-master ~]# kubectl get po
+NAME                                READY   STATUS        RESTARTS   AGE
+my-nginx-release-74fd69f69b-xbp2n   0/1     Terminating   0          97m
+my-nginx-release-cc5cdfd-hrr84      1/1     Running       0          18s
+my-release-nginx-7b5b676974-z2fwm   1/1     Running       0          31m
+[root@k-master ~]# kubectl get po
+NAME                                READY   STATUS    RESTARTS   AGE
+my-nginx-release-cc5cdfd-hrr84      1/1     Running   0          24s
+my-release-nginx-7b5b676974-z2fwm   1/1     Running   0          31m
+[root@k-master ~]#
+[root@k-master ~]# kubectl get deploy my-nginx-release -o yaml|grep -i Always
+        imagePullPolicy: Always
+      restartPolicy: Always
+[root@k-master ~]#
